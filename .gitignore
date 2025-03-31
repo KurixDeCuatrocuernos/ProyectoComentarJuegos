@@ -28,3 +28,8 @@ doc/api/
 ### Firebase Patch ###
 .runtimeconfig.json
 .firebase/
+
+# Archivos de configuración de Firebase
+google-services.json
+GoogleService-Info.plist
+lib/firebase_options.dart
