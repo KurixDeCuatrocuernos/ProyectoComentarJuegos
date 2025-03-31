@@ -1,9 +1,18 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:game_box/firebase_options.dart';
 import 'package:game_box/routes/AppPages.dart';
 import 'package:game_box/routes/AppRoutes.dart';
+import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 
-void main() {
+import 'auth/structure/controllers/AuthController.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -16,7 +25,10 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Flutter Demo',
       getPages: AppPages.routes,
-      initialRoute: Routes.register,
+      initialRoute: Routes.login,
+      initialBinding: BindingsBuilder((){
+        Get.put<AuthController>(AuthController());
+      }),
     );
   }
 }

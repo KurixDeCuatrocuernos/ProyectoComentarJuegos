@@ -1,4 +1,5 @@
 
+import 'package:game_box/pages/HomePage.dart';
 import 'package:game_box/pages/LoadingPage.dart';
 import 'package:get/get.dart';
 import '../pages/LoginPage.dart';
@@ -18,6 +19,10 @@ class AppPages {
     GetPage(
         name: Routes.register,
         page: () => const RegisterPage(),
+    ),
+    GetPage(
+        name: Routes.home,
+        page: () => const HomePage(),
     ),
   ];
 }
