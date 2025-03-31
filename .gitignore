@@ -28,3 +28,16 @@ doc/api/
 ### Firebase Patch ###
 .runtimeconfig.json
 .firebase/
+/lib/firebase_options.dart
+
+# Firebase config files
+google-services.json
+ios/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
+
+# Admin SDK credentials
+service-account.json
+
+# Environment variables
+.env
+.env.local
