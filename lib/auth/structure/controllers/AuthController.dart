@@ -25,7 +25,7 @@ class AuthController extends GetxController {
 
   handleAuthChanged(User? firebaseUser) async {
     if (firebaseUser?.isAnonymous == false && firebaseUser?.uid != null){
-      ///Get.offAllNamed(Routes.home);
+      Get.offAllNamed(Routes.home);
     } else {
       Get.offAllNamed(Routes.login);
     }
@@ -55,6 +55,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> signOut() async {
+    print('You have been logged out');
     return _auth.signOut();
   }
 

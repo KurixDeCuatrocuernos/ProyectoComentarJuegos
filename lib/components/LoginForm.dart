@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:game_box/auth/utils/PasswordToggler.dart';
@@ -125,8 +126,14 @@ class LoginForm extends StatelessWidget{
                   print("Google Login button pressed");
                   await authController.loginWithGoogle();
                 },
-                icon: Image.asset(
-                  'assets/google/light/web_light_rd_na@4x.png',
+                icon: kIsWeb
+                    ? Image.asset(
+                  'google/light/web_light_rd_na.png',
+                  width: 60,
+                  height: 60,
+                )
+                    : SvgPicture.asset(
+                  'assets/google_android/light/android_light_rd_na.svg',
                   width: 60,
                   height: 60,
                 ),

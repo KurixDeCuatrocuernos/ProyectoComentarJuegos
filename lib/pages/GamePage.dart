@@ -1,26 +1,41 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:game_box/auth/structure/controllers/AuthController.dart';
-import 'package:game_box/components/SearchPlaceholder.dart';
-import 'package:game_box/components/UserImage.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
+import '../auth/structure/controllers/AuthController.dart';
+import '../components/SearchPlaceholder.dart';
 import '../components/SearchResults.dart';
 import '../components/ToolBar.dart';
+import '../components/UserImage.dart';
 import '../components/UserName.dart';
+import '../components/GameComponent.dart';
 import '../routes/AppRoutes.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class GamePage extends StatefulWidget {
+  const GamePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _GamePageState createState() => _GamePageState();
 }
-
-class _HomePageState extends State<HomePage> {
+class _GamePageState extends State<GamePage> {
   AuthController _authController = AuthController();
+  Map<String, dynamic>? _game;
+
+@override
+void initState() {
+  super.initState();
+
+  // Comprobamos si Get.arguments tiene un valor válido
+  if (Get.arguments != null && Get.arguments.isNotEmpty) {
+    _game = Get.arguments;  // Asigna el gameId desde los argumentos
+  } else {
+    // Si no se recibe un gameId, redirige a una página de error o una pantalla de carga
+    Future.delayed(Duration.zero, () {
+      Get.offAllNamed(Routes.loading);  // Redirige a una página de error
+    });
+  }
+}
 
   void _signOut() {
     showDialog(
@@ -49,10 +64,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _redirectToMain() {
-    Get.offAllNamed(Routes.home);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,24 +86,12 @@ class _HomePageState extends State<HomePage> {
                   if (kIsWeb) UserName(),
                 ],
                 backgroundColor: Colors.black,
-                //bottom: , Aquí iría el bottom
               ),
 
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: List.generate(
-                      50,
-                          (index) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Elemento $index',
-                          style: TextStyle(fontSize: 18, color: Colors.black),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                child:
+                // prueba de que funciona: Text(_gameId!['name'] ?? 'juego desconocido'),
+                GameComponent(game: _game!,),
               ),
             ],
           ),

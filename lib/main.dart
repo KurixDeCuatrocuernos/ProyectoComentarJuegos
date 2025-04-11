@@ -1,19 +1,40 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:game_box/firebase_options.dart';
+import 'package:game_box/games/services/IgdbApiRepository.dart';
 import 'package:game_box/routes/AppPages.dart';
 import 'package:game_box/routes/AppRoutes.dart';
 import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:provider/provider.dart';
 
 import 'auth/structure/controllers/AuthController.dart';
+import 'games/utils/SearchResultsUtil.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  await dotenv.load(fileName: ".env");
+  IgdbApiRepository igdbRepo = IgdbApiRepository();
+  await igdbRepo.initToken();
+  // if (kIsWeb) {
+  //   print("La app está corriendo en Web");
+  //   ApiProxyServer proxy = ApiProxyServer();
+  //   proxy.startServer();
+  // }
+  runApp(
+    MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => SearchResultsUtil()),
+          Provider<IgdbApiRepository>.value(value: igdbRepo),
+        ],
+    child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

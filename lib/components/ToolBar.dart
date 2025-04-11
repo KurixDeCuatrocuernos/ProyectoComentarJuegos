@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:game_box/components/SearchPlaceholder.dart';
 
 class ToolBar extends StatelessWidget{
   ToolBar({super.key});
@@ -14,31 +15,23 @@ class ToolBar extends StatelessWidget{
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Text(
-            "Objeto1",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
+          IconButton(
+            icon: Icon(Icons.view_headline_sharp),
+            color: Colors.white,
+            iconSize: 25,
+            onPressed: () {  },
           ),
-          SizedBox(width: 20),
-          Text(
-            "Objeto2",
-            style: TextStyle(
+          IconButton(
+              onPressed: () {},
+              icon: Icon(Icons.home),
               color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
+              iconSize: 30,
           ),
-          SizedBox(width: 20),
-          Text(
-            "Objeto3",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(Icons.star),
+            iconSize: 30,
+            color: Colors.white,
           ),
         ],
       ),
