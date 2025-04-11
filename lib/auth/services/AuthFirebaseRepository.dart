@@ -21,6 +21,7 @@ class AuthFirebaseRepository {
 
       if (user != null) {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'uid': user.uid,
           'name': name,
           'email': email,
           'createdAt': FieldValue.serverTimestamp(), // creation account's date
