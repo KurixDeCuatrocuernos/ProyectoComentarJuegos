@@ -1,9 +1,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:game_box/components/SearchPlaceholder.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+
+import '../routes/AppRoutes.dart';
 
 class ToolBar extends StatelessWidget{
   ToolBar({super.key});
+
+  void _homeRedirect() {
+    Get.offAllNamed(Routes.home);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +30,7 @@ class ToolBar extends StatelessWidget{
             onPressed: () {  },
           ),
           IconButton(
-              onPressed: () {},
+              onPressed: () {_homeRedirect();},
               icon: Icon(Icons.home),
               color: Colors.white,
               iconSize: 30,
