@@ -66,7 +66,7 @@ class IgdbApiRepository {
         "Client-ID": _clientId,
         'Authorization': 'Bearer $_accessToken',
       },
-      body: 'fields name, genres.name, rating, cover; search "$query";',
+      body: 'fields name, genres.name, rating, summary, cover; search "$query";',
     );
 
     if (response.statusCode == 200) {
