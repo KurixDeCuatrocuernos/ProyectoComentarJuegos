@@ -1,12 +1,16 @@
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/auth/structure/controllers/AuthController.dart';
+import 'package:game_box/components/GameListComponent.dart';
 import 'package:game_box/components/SearchPlaceholder.dart';
 import 'package:game_box/components/UserImage.dart';
+import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
+import '../components/CommentedGamesListComponent.dart';
 import '../components/SearchResults.dart';
 import '../components/ToolBar.dart';
 import '../components/UserName.dart';
@@ -55,6 +59,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    User? user = FirebaseAuth.instance.currentUser;
+    Future<bool> _haveCommented() async{
+
+      bool commented = false;
+      if (user != null) {
+        commented = await CommentaryRepository().getIfUserHasCommented(user);
+      }
+      print("EL USUARIO HA COMENTADO: $commented");
+      return commented;
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey,
       bottomNavigationBar: ToolBar(),
@@ -64,15 +79,22 @@ class _HomePageState extends State<HomePage> {
             children: [
               AppBar(
                 leading: IconButton(
-                  onPressed: _signOut,
-                  icon: Icon(Icons.logout_rounded),
+                    onPressed: () {
+                      Get.back();
+                    },
                   color: Colors.white,
-                  iconSize: 30,
+                    icon: Icon(Icons.arrow_back),
                 ),
                 title: UserImage(),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
+                  IconButton(
+                    onPressed: _signOut,
+                    icon: Icon(Icons.logout_rounded),
+                    color: Colors.white,
+                    iconSize: 30,
+                  ),
                 ],
                 backgroundColor: Colors.black,
                 //bottom: , Aquí iría el bottom
@@ -81,16 +103,39 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
-                    children: List.generate(
-                      50,
-                          (index) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Elemento $index',
-                          style: TextStyle(fontSize: 18, color: Colors.black),
-                        ),
+                    children: [
+
+                      FutureBuilder<bool>(
+                        future: _haveCommented(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return SizedBox(height: 20); // o un loader si prefieres
+                          } else if (snapshot.hasData && snapshot.data == true) {
+                            return Column(
+                              children: [
+                                SizedBox(height: 20),
+                                CommentedGamesListComponent(user: user),
+                                SizedBox(height: 20,),
+                              ],
+                            );
+                          } else {
+                            return SizedBox(height: 20);
+                          }
+                        },
                       ),
-                    ),
+
+                    GameListComponent(genre: "Role-playing (RPG)"),
+                      // SizedBox(height: 20,),
+                      // GameListComponent(genre: "Visual Novel"),
+                      // SizedBox(height: 20,),
+                      // GameListComponent(genre: "Indie"),
+                      // SizedBox(height: 20,),
+                      // GameListComponent(genre: "Adventure"),
+                      // SizedBox(height: 20,),
+                      // GameListComponent(genre: "Platform"),
+
+                      SizedBox(height: 20,),
+                    ]
                   ),
                 ),
               ),
