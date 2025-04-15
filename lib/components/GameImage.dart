@@ -10,7 +10,7 @@ class GameImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
-      future: Provider.of<IgdbApiRepository>(context, listen: false).getCover(game['cover'] ?? ''),  // Usamos el 'cover' como identificador del juego
+      future: Provider.of<IgdbApiRepository>(context, listen: false).getCover(game['cover']),  // Usamos el 'cover' como identificador del juego
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator(); // Muestra un cargando mientras se obtiene la imagen
