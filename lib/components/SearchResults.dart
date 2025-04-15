@@ -11,7 +11,7 @@ class SearchResults extends StatelessWidget {
   SearchResults({super.key});
 
   void _gameRedirect(Map<String, dynamic> game) {
-    Get.offAllNamed(Routes.game, arguments: game);
+    Get.toNamed(Routes.game, arguments: game);
   }
 
   @override

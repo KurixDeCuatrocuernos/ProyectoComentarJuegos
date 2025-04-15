@@ -75,15 +75,22 @@ void initState() {
             children: [
               AppBar(
                 leading: IconButton(
-                  onPressed: _signOut,
-                  icon: Icon(Icons.logout_rounded),
+                  onPressed: () {
+                    Get.back();
+                  },
                   color: Colors.white,
-                  iconSize: 30,
+                  icon: Icon(Icons.arrow_back),
                 ),
                 title: UserImage(),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
+                  IconButton(
+                    onPressed: _signOut,
+                    icon: Icon(Icons.logout_rounded),
+                    color: Colors.white,
+                    iconSize: 30,
+                  ),
                 ],
                 backgroundColor: Colors.black,
               ),
