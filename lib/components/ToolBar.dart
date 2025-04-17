@@ -8,10 +8,7 @@ import '../routes/AppRoutes.dart';
 
 class ToolBar extends StatelessWidget{
   ToolBar({super.key});
-
-  void _homeRedirect() {
-    Get.offAllNamed(Routes.home);
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +27,7 @@ class ToolBar extends StatelessWidget{
             onPressed: () {  },
           ),
           IconButton(
-              onPressed: () {_homeRedirect();},
+              onPressed: () { Get.offAllNamed(Routes.home);},
               icon: Icon(Icons.home),
               color: Colors.white,
               iconSize: 30,
