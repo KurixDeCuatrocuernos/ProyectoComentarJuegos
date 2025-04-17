@@ -85,7 +85,7 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                     icon: Icon(Icons.arrow_back),
                 ),
-                title: UserImage(),
+                title: UserImage(size: 45,),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
@@ -97,7 +97,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
                 backgroundColor: Colors.black,
-                //bottom: , Aquí iría el bottom
               ),
 
               Expanded(

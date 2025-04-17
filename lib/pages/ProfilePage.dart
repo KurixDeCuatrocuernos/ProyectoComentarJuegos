@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:game_box/components/ProfileComponent.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
@@ -9,33 +10,18 @@ import '../components/SearchResults.dart';
 import '../components/ToolBar.dart';
 import '../components/UserImage.dart';
 import '../components/UserName.dart';
-import '../components/GameComponent.dart';
 import '../routes/AppRoutes.dart';
 
-class GamePage extends StatefulWidget {
-  const GamePage({super.key});
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
 
   @override
-  _GamePageState createState() => _GamePageState();
+  State<ProfilePage> createState() => _ProfilePageState();
 }
-class _GamePageState extends State<GamePage> {
+
+class _ProfilePageState extends State<ProfilePage> {
   AuthController _authController = AuthController();
-  Map<String, dynamic>? _game;
 
-@override
-void initState() {
-  super.initState();
-
-  // Comprobamos si Get.arguments tiene un valor válido
-  if (Get.arguments != null && Get.arguments.isNotEmpty) {
-    _game = Get.arguments;  // Asigna el gameId desde los argumentos
-  } else {
-    // Si no se recibe un gameId, redirige a una página de error o una pantalla de carga
-    Future.delayed(Duration.zero, () {
-      Get.offAllNamed(Routes.loading);  // Redirige a una página de error
-    });
-  }
-}
 
   void _signOut() {
     showDialog(
@@ -96,10 +82,9 @@ void initState() {
               ),
 
               Expanded(
-                child:
-                // prueba de que funciona: Text(_gameId!['name'] ?? 'juego desconocido'),
-                GameComponent(game: _game!,),
+                  child: ProfileComponent(),
               ),
+
             ],
           ),
           SearchResults(), // Muestra la lista de resultados

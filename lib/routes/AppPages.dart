@@ -4,6 +4,7 @@ import 'package:game_box/pages/LoadingPage.dart';
 import 'package:get/get.dart';
 import '../pages/GamePage.dart';
 import '../pages/LoginPage.dart';
+import '../pages/ProfilePage.dart';
 import '../pages/RegisterPage.dart';
 import 'AppRoutes.dart';
 
@@ -28,6 +29,10 @@ class AppPages {
     GetPage(
       name: Routes.game,
       page: () => const GamePage(),
+    ),
+    GetPage(
+      name: Routes.profile,
+      page: () => const ProfilePage(),
     ),
   ];
 }

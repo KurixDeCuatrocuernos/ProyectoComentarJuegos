@@ -125,7 +125,7 @@ class RegisterForm extends StatelessWidget{
                   print("This form is correct");
                   Get.offAllNamed(Routes.loading);
                 } else {
-                  print("Try again!");
+                  print("Try again!"); /// mostrar mensaje de aviso
                 }
               },
               style: ButtonStyle(
