@@ -81,7 +81,7 @@ void initState() {
                   color: Colors.white,
                   icon: Icon(Icons.arrow_back),
                 ),
-                title: UserImage(),
+                title: UserImage(size: 45,),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
