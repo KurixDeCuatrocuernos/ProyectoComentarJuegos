@@ -7,7 +7,8 @@ import 'package:get/get_core/src/get_main.dart';
 import '../routes/AppRoutes.dart';
 
 class ToolBar extends StatelessWidget{
-  ToolBar({super.key});
+  final VoidCallback onMenuPressed;
+  ToolBar({super.key, required this.onMenuPressed});
   
 
   @override
@@ -24,7 +25,7 @@ class ToolBar extends StatelessWidget{
             icon: Icon(Icons.view_headline_sharp),
             color: Colors.white,
             iconSize: 25,
-            onPressed: () {  },
+            onPressed: onMenuPressed,
           ),
           IconButton(
               onPressed: () { Get.offAllNamed(Routes.home);},
@@ -33,7 +34,7 @@ class ToolBar extends StatelessWidget{
               iconSize: 30,
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () { Get.offAllNamed(Routes.comments); },
             icon: Icon(Icons.star),
             iconSize: 30,
             color: Colors.white,

@@ -20,8 +20,22 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  AuthController _authController = AuthController();
 
+  bool _isSidebarOpen = false;
+
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarOpen = !_isSidebarOpen;
+    });
+  }
+
+  void _closeSidebar() {
+    setState(() {
+      _isSidebarOpen = false;
+    });
+  }
+
+  AuthController _authController = AuthController();
 
   void _signOut() {
     showDialog(
@@ -41,7 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Text('Yes'),
               onPressed: () {
                 _authController.signOut();
-                Get.offAllNamed(Routes.login);// Llamar a la función para cerrar sesión
+                Get.offAllNamed(Routes.login);
               },
             ),
           ],
@@ -54,7 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey,
-      bottomNavigationBar: ToolBar(),
+      bottomNavigationBar: ToolBar(onMenuPressed: _toggleSidebar),
       body: Stack(
         children: [
           Column(
@@ -87,6 +101,42 @@ class _ProfilePageState extends State<ProfilePage> {
 
             ],
           ),
+
+          /// BARRA LATERAL + OVERLAY
+          if (_isSidebarOpen)
+            GestureDetector(
+              onTap: _closeSidebar,
+              child: Container(
+                color: Colors.black54, // oscurece el fondo
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+
+          AnimatedPositioned(
+            duration: Duration(milliseconds: 300),
+            left: _isSidebarOpen ? 0 : -250,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 250,
+              color: Colors.grey[900],
+              child: Column(
+                children: [
+                  SizedBox(height: 50),
+                  ListTile(
+                    title: Text("Inicio", style: TextStyle(color: Colors.white)),
+                    onTap: () => Get.offAllNamed(Routes.home),
+                  ),
+                  ListTile(
+                    title: Text("Comentarios", style: TextStyle(color: Colors.white)),
+                    onTap: () => Get.offAllNamed(Routes.comments),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           SearchResults(), // Muestra la lista de resultados
         ],
       ),
