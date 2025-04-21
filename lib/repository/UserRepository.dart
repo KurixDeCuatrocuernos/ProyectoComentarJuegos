@@ -190,4 +190,31 @@ class UserRepository {
     }
   }
 
+  Future<double?> getWeightById(String id) async {
+    try {
+      final DocumentSnapshot response = await FirebaseFirestore.instance
+          .collection(_collection)
+          .doc(id)
+          .get();
+      if (response.exists) {
+        final weight = response['weight'];
+
+        if (weight is double) {
+          return weight;
+        } else if (weight is int) {
+          return weight.toDouble();
+        } else if (weight is String) {
+          return double.tryParse(weight);
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } catch (error) {
+      print("There was an error connecting with the database");
+      return null;
+    }
+  }
+
 }
