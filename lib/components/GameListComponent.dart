@@ -11,25 +11,24 @@ class GameListComponent extends StatelessWidget {
   final String genre;
   const GameListComponent({super.key, required this.genre});
 
+  Future<List<Map<String, dynamic>>?> _getGames(BuildContext context, String genre) async {
+    var genreId = await Provider.of<IgdbApiRepository>(context, listen: false).getGenreId(genre);
+    if (genreId != null) {
+      List<Map<String, dynamic>> gamesList = await Provider.of<IgdbApiRepository>(context, listen: false).getAllGamesByGenre(genreId);
+      if (!gamesList.isEmpty) {
+        print("LA LISTA DE JUEGOS ES: ${gamesList.toString()}");
+        return gamesList;
+      } else {
+        print("THERE IS NO GAME IN THE RETURNED LIST");
+        return [];
+      }
+    } else {
+      print('The GENRE ID IS NULL');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-
-    Future<List<Map<String, dynamic>>?> _getGames(String genre) async {
-      var genreId = await Provider.of<IgdbApiRepository>(context, listen: false).getGenreId(genre);
-      if (genreId != null) {
-        List<Map<String, dynamic>> gamesList = await Provider.of<IgdbApiRepository>(context, listen: false).getAllGamesByGenre(genreId);
-        if (!gamesList.isEmpty) {
-          print("LA LISTA DE JUEGOS ES: ${gamesList.toString()}");
-          return gamesList;
-        } else {
-          print("THERE IS NO GAME IN THE RETURNED LIST");
-          return [];
-        }
-      } else {
-        print('The GENRE ID IS NULL');
-      }
-    }
-
     return Container(
       height: 200,
       width: double.infinity,
@@ -48,7 +47,7 @@ class GameListComponent extends StatelessWidget {
           SizedBox(height: 5),
           // NO uses Row aquí
           FutureBuilder(
-            future: _getGames(genre),
+            future: _getGames(context, genre),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator(color: Colors.white));

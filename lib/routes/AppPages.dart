@@ -1,4 +1,5 @@
 
+import 'package:game_box/pages/CommentsPage.dart';
 import 'package:game_box/pages/HomePage.dart';
 import 'package:game_box/pages/LoadingPage.dart';
 import 'package:get/get.dart';
@@ -33,6 +34,10 @@ class AppPages {
     GetPage(
       name: Routes.profile,
       page: () => const ProfilePage(),
+    ),
+    GetPage(
+      name: Routes.comments,
+      page: () => const CommentsPage(),
     ),
   ];
 }

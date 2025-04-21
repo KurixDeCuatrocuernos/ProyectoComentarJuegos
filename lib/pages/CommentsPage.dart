@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:game_box/components/ProfileComponent.dart';
+import 'package:game_box/components/UserCommentsListComponent.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
@@ -12,14 +12,14 @@ import '../components/UserImage.dart';
 import '../components/UserName.dart';
 import '../routes/AppRoutes.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class CommentsPage extends StatefulWidget {
+  const CommentsPage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<CommentsPage> createState() => _CommentsPageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _CommentsPageState extends State<CommentsPage> {
 
   bool _isSidebarOpen = false;
 
@@ -95,8 +95,19 @@ class _ProfilePageState extends State<ProfilePage> {
                 backgroundColor: Colors.black,
               ),
 
+              ///Content
               Expanded(
-                  child: ProfileComponent(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      SizedBox(height: 20,),
+
+                      UserCommentsListComponent(),
+
+
+                    ],
+                  ),
+                ),
               ),
 
             ],
@@ -143,3 +154,4 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+

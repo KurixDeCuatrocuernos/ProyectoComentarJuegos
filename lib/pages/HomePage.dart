@@ -8,7 +8,6 @@ import 'package:game_box/components/SearchPlaceholder.dart';
 import 'package:game_box/components/UserImage.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 import '../components/CommentedGamesListComponent.dart';
 import '../components/SearchResults.dart';
@@ -24,7 +23,22 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
   AuthController _authController = AuthController();
+
+  bool _isSidebarOpen = false;
+
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarOpen = !_isSidebarOpen;
+    });
+  }
+
+  void _closeSidebar() {
+    setState(() {
+      _isSidebarOpen = false;
+    });
+  }
 
   void _signOut() {
     showDialog(
@@ -53,26 +67,22 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _redirectToMain() {
-    Get.offAllNamed(Routes.home);
+  Future<bool> _haveCommented() async{
+    User? _user = FirebaseAuth.instance.currentUser;
+    bool commented = false;
+    if (_user != null) {
+      commented = await CommentaryRepository().getIfUserHasCommented(_user);
+    }
+    print("EL USUARIO HA COMENTADO: $commented");
+    return commented;
   }
 
   @override
   Widget build(BuildContext context) {
-    User? user = FirebaseAuth.instance.currentUser;
-    Future<bool> _haveCommented() async{
-
-      bool commented = false;
-      if (user != null) {
-        commented = await CommentaryRepository().getIfUserHasCommented(user);
-      }
-      print("EL USUARIO HA COMENTADO: $commented");
-      return commented;
-    }
-
+    User? _user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       backgroundColor: Colors.grey,
-      bottomNavigationBar: ToolBar(),
+      bottomNavigationBar: ToolBar(onMenuPressed: _toggleSidebar),
       body: Stack(
         children: [
           Column(
@@ -108,12 +118,12 @@ class _HomePageState extends State<HomePage> {
                         future: _haveCommented(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
-                            return SizedBox(height: 20); // o un loader si prefieres
+                            return SizedBox(height: 20);
                           } else if (snapshot.hasData && snapshot.data == true) {
                             return Column(
                               children: [
                                 SizedBox(height: 20),
-                                CommentedGamesListComponent(user: user),
+                                CommentedGamesListComponent(user: _user),
                                 SizedBox(height: 20,),
                               ],
                             );
@@ -140,6 +150,38 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+
+          /// BARRA LATERAL + OVERLAY
+          if (_isSidebarOpen)
+            GestureDetector(
+              onTap: _closeSidebar,
+              child: Container(
+                color: Colors.black54, // oscurece el fondo
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+
+          AnimatedPositioned(
+            duration: Duration(milliseconds: 300),
+            left: _isSidebarOpen ? 0 : -250,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 250,
+              color: Colors.grey[900],
+              child: Column(
+                children: [
+                  SizedBox(height: 50),
+                  ListTile(
+                    title: Text("Comentarios", style: TextStyle(color: Colors.white)),
+                    onTap: () => Get.offAllNamed(Routes.comments),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           SearchResults(), // Muestra la lista de resultados
         ],
       ),
