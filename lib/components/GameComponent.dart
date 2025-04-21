@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:game_box/components/CommentaryComponent.dart';
 import 'package:game_box/components/GameImage.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
+import 'package:game_box/repository/UserRepository.dart';
+import 'package:get/get.dart';
 
 
 class GameComponent extends StatelessWidget {
@@ -46,6 +48,48 @@ class GameComponent extends StatelessWidget {
     );
   }
 
+  Future<int> _getRating(Map<String, dynamic> game) async {
+    /// Recoger valor comentario
+    CommentaryRepository _commentRepo = CommentaryRepository();
+    List<Map<String, dynamic>>? list = await _commentRepo.getWeightAndValuesByGame(game);
+    if (list != null) {
+      print("Firestore ha devuelto: $list");
+      double sumWeight = 0;
+      double productValues = 0;
+      for(var element in list!) {
+        /// sum all the weights
+        sumWeight += element['weight'] as double;
+        /// sum the products of the values and weights
+        productValues += (element['value'] as double) * (element['weight'] as double);
+      }
+
+      /// dividir la suma de los productos entre la suma de los pesos
+      print("la media ponderada de: $productValues entre: $sumWeight es: ${(productValues/sumWeight).round()}");
+      return (productValues/sumWeight).round();
+    } else {
+      return 0;
+    }
+  }
+
+  Future<int> _whichRating(Map<String, dynamic> game) async {
+    CommentaryRepository _commentRepo = CommentaryRepository();
+    int? commentaries = await _commentRepo.countCommentsByGame(game);
+    print("NÚMERO DE COMENTARIOS: $commentaries");
+    if (commentaries != null && commentaries >= 1) {
+      print("SE HA CALCULADO EL RATING: ${_getRating(game)}");
+      return _getRating(game);
+    } else {
+      double doubleRandom = Random().nextDouble()*101; /// NÚMERO RANDOM POR SI RATING ES NULO
+      if (game['rating'] != null) {
+        print("SE HA DEVUELTO EL RATING DE IGDB: ${game['rating']}");
+        return game['rating'].round();
+      } else {
+        print("SE HA DEVUELTO UN RATING ALEATORIO: $doubleRandom");
+        return doubleRandom.round();
+      }
+    }
+  }
+
 
   Future<bool> _isCommented() async{
   /// verificamos si el usuario ha comentado o no este juego
@@ -58,33 +102,35 @@ class GameComponent extends StatelessWidget {
     return cell;
   }
 
-  int _gameRatingColor(double rating) {
+  int _gameRatingColor(int rating) {
     if (rating > 0 && rating < 10) {
-      return 0xFFBC0101;
+      return 0xFFBC0101; // Color rojo
     } else if (rating >= 10 && rating < 20) {
-      return 0xFFAF1B02;
+      return 0xFFAF1B02; // Color naranja oscuro
     } else if (rating >= 20 && rating < 30) {
-      return 0xFFBD4F01;
+      return 0xFFBD4F01; // Color naranja
     } else if (rating >= 30 && rating < 40) {
-      return 0xFFC18101;
+      return 0xFFC18101; // Color naranja claro
     } else if (rating >= 40 && rating < 50) {
-      return 0xFFBD9302;
+      return 0xFFBD9302; // Color amarillo oscuro
     } else if (rating >= 50 && rating < 60) {
-      return 0xFFC5B201;
+      return 0xFFC5B201; // Color amarillo
+    } else if (rating >= 60 && rating < 70) { // Añadido para valores de 60
+      return 0xFF9EB500; // Color verde claro
     } else if (rating >= 70 && rating < 80) {
-      return 0xFF9EB500;
+      return 0xFF9EB500; // Color verde claro
     } else if (rating >= 80 && rating < 90) {
-      return 0xFF5FA802;
+      return 0xFF5FA802; // Color verde
     } else if (rating >= 90) {
-      return 0xFF029C05;
+      return 0xFF029C05; // Color verde oscuro
     } else {
-      return 0xFF0048FF;
+      return 0xFF0048FF; // Color azul (valor por defecto)
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
-    double doubleRandom = Random().nextDouble()*101; /// NÚMERO RANDOM POR SI RATING ES NULO
     return Column(
       children: [
         Row(
@@ -96,7 +142,7 @@ class GameComponent extends StatelessWidget {
             SizedBox(
               width: 128,
               height: 256,
-              child: game?['cover'] != null ? GameImage(game: game!) : Text('Image Not Found'), /// Hay que cambiarlo por la imagen correspondiente
+              child: game?['url'] != null ? Image.network(game!['url']): GameImage(game: game!), /// Hay que cambiarlo por la imagen correspondiente
             ),
             SizedBox(
               width: 128,
@@ -110,28 +156,40 @@ class GameComponent extends StatelessWidget {
                 ),
               ),
             ),
-            Container(
-              width: 64,
-              height: 64,
-              decoration:
-                BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(
-                    _gameRatingColor((game?['rating'] ?? doubleRandom)), /// REVISAR LA LÓGICA POR SI RATING ES NULO
-                  ),
-                ),
-              alignment: Alignment.center,
-              child:
-                Text(
-                  (game?['rating'] ?? doubleRandom).round().toString(),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-            )
+            FutureBuilder(
+                future: _whichRating(game!),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    print("ERROR: ${snapshot.error}");
+                    return Text("Error");
+                  } else if (snapshot.hasData) {
+                    return Container(
+                      width: 64,
+                      height: 64,
+                      decoration:
+                      BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(_gameRatingColor(snapshot.data!)),
+                      ),
+                      alignment: Alignment.center,
+                      child:
+                      Text(
+                        snapshot.data!.toString(),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  } else {
+                    return Text("Empty Data");
+                  }
+                }
+            ),
           ],
         ),
         SizedBox(
@@ -145,17 +203,10 @@ class GameComponent extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(
-            child: SizedBox(
-
-            ),
-        ),
+        SizedBox(height: 20,),
         Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Expanded(
-                child: SizedBox(),
-            ),
-
             FutureBuilder<bool>(
               future: _isCommented(), // tu función async que devuelve Future<bool>
               builder: (context, snapshot) {
