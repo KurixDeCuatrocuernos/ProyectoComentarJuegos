@@ -20,8 +20,7 @@ import 'package:crypto/crypto.dart';
 
 class UserImage extends StatefulWidget {
   final double size;
-  final bool editing;
-  const UserImage({super.key, required this.size, this.editing = false});
+  const UserImage({super.key, required this.size});
 
   @override
   _UserImageState createState() => _UserImageState();

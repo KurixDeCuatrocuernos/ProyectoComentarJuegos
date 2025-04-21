@@ -19,7 +19,7 @@ class GameImage extends StatelessWidget {
         } else if (snapshot.hasData) {
           return Image.network(snapshot.data!); // Muestra la imagen una vez se haya obtenido la URL
         } else {
-          return Text('Imagen no disponible');
+          return Text('IMAGE NOT FOUND');
         }
       },
     );

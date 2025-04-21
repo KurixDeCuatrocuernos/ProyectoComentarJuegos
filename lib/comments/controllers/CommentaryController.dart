@@ -51,7 +51,7 @@ class CommentaryController extends GetxController {
       'name': game['name'],
       'summary': game['summary'],
       'rating': game['rating'],
-      'coverId': game['cover'],
+      'cover': game['cover'],
       'url': URL,
       'first_release_date': rawTimestamp != null ? convertedDate : null,
     }, SetOptions(merge: true));
