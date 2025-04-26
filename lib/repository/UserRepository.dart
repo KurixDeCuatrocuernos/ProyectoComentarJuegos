@@ -1,7 +1,9 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
+import 'package:get/get_utils/get_utils.dart';
 
 class UserRepository {
 
@@ -214,6 +216,135 @@ class UserRepository {
     } catch (error) {
       print("There was an error connecting with the database");
       return null;
+    }
+  }
+
+  Future<String?> getUserRoleByUid(String uid) async {
+    try {
+      final DocumentSnapshot response = await FirebaseFirestore.instance
+          .collection(_collection)
+          .doc(uid)
+          .get();
+      if (response.exists) {
+        print("EL ROLE RECOGIDO ES: ${response['role']}");
+        return response['role'];
+      } else {
+        return null;
+      }
+    } catch (error) {
+      print("Hubo un error al conectar a la base de datos: $error");
+      return null;
+    }
+  }
+
+  Future <List<Map<String, dynamic>>?> getAllUsers() async {
+    try {
+      final QuerySnapshot response = await FirebaseFirestore.instance
+          .collection(_collection)
+          .get();
+      if (response.docs.isNotEmpty) {
+        return response.docs.map((doc) {
+          final data = doc.data();
+          if(data is Map<String, dynamic>) {
+            return data;
+          } else {
+            print("Documento con Formato inesperado: $doc");
+            return <String, dynamic>{};
+          }
+        }).toList();
+      } else {
+        return null;
+      }
+    } catch (error) {
+      print("Hubo un error al conectar a la base de datos: $error");
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> getUsersByQuery(String query) async {
+    try{
+      final QuerySnapshot response = await FirebaseFirestore.instance
+          .collection(_collection)
+          .where('name', isGreaterThanOrEqualTo: query)
+          .where('name', isLessThanOrEqualTo: query + '\uf8ff')
+          .get();
+      if (response.docs.isNotEmpty) {
+        return response.docs.map((doc) {
+          final data = doc.data();
+          if(data is Map<String, dynamic>) {
+            return data;
+          } else {
+            print("Documento con Formato inesperado: $doc");
+            return <String, dynamic>{};
+          }
+        }).toList();
+      } else {
+        return [];
+      }
+    } catch (error) {
+      print("Hubo un error al conectar a la base de datos: $error");
+      return null;
+    }
+  }
+
+  /// This method deletes a user and its comments from database (everything or nothing)
+  /// if deletes everything returns true,
+  /// if anything miss, deletes nothing and returns false
+  Future<bool> deleteUserByUid(String uid) async {
+    try {
+      CommentaryRepository _commentRepo = CommentaryRepository();
+      final batch = await FirebaseFirestore.instance.batch();
+
+      await _commentRepo.deleteAllCommentsByUser(uid, batch);
+      final userDocId = FirebaseFirestore.instance.collection(_collection).doc(uid);
+      batch.delete(userDocId);
+      await batch.commit();
+
+      return true;
+    } catch (error) {
+      print("Hubo un error al conectar al a base de datos: $error");
+      return false;
+    }
+  }
+
+  Future<bool> banUserByUid(String uid) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection(_collection)
+          .doc(uid)
+          .update({
+            'status': 5, // status 5 = banned
+          });
+      return true;
+    } catch (error) {
+      print("Hubo un error al conectar al a base de datos: $error");
+      return false;
+    }
+  }
+
+  Future<bool> unbanUserByUid(String uid) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection(_collection)
+          .doc(uid)
+          .update({
+        'status': 0, // status 0 = regular
+      });
+      return true;
+    } catch (error) {
+      print("Hubo un error al conectar al a base de datos: $error");
+      return false;
+    }
+  }
+
+  Future<bool> updateUser(Map<String, dynamic> userData) async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      /// Terminar el metodo invocando a update email
+      return true;
+    } catch (error) {
+      print("Hubo un error al conectar con la base de datos: $error");
+      return false;
     }
   }
 

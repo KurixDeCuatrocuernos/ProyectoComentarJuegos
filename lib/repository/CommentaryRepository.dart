@@ -172,5 +172,17 @@ class CommentaryRepository {
     }
   }
 
+  /// This method deletes all comments by a Batch object instantiated in deleteUserByUid from UserRepository in order to delete everything or nothing
+  Future<void> deleteAllCommentsByUser(String uid, WriteBatch batch) async {
+      final QuerySnapshot response = await FirebaseFirestore.instance
+          .collection(_collection)
+          .where('userId', isEqualTo: uid)
+          .get();
+      for (final doc in response.docs) {
+        final docId = FirebaseFirestore.instance.collection(_collection).doc(doc.id);
+        batch.delete(docId);
+      }
+  }
+
 
 }
