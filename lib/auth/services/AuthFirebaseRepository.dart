@@ -28,6 +28,7 @@ class AuthFirebaseRepository {
           'weight': 1.0, // User's default weight
           'image': null, // User's default image
           'role': "USER", // User's default role
+          'status': 0,
         });
       }
 

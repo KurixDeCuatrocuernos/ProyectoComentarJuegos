@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:game_box/components/ShowUserComponent.dart';
 import 'package:get/get.dart';
 
 import '../auth/structure/controllers/AuthController.dart';
@@ -12,17 +14,20 @@ import '../components/UserName.dart';
 import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
 
-class UsersPage extends StatefulWidget {
-  const UsersPage({super.key});
+class UsersManagePage extends StatefulWidget {
+  const UsersManagePage({super.key});
 
   @override
-  State<UsersPage> createState() => _UsersPageState();
+  State<UsersManagePage> createState() => _UsersManagePageState();
 }
 
-class _UsersPageState extends State<UsersPage> {
+class _UsersManagePageState extends State<UsersManagePage> {
 
   AuthController _authController = AuthController();
+  UserRepository _userRepo = UserRepository();
   bool _isSidebarOpen = false;
+  bool _searchStatus = false;
+  String _searchText = '';
 
   @override
   void initState() {
@@ -30,7 +35,17 @@ class _UsersPageState extends State<UsersPage> {
     _checkRole();
   }
 
+  void _toggleSearch() {
+    setState(() {
+      _searchStatus = true;
+    });
+  }
 
+  void _closeSearch() {
+    setState(() {
+      _searchStatus = false;
+    });
+  }
 
   void _toggleSidebar() {
     setState(() {
@@ -93,7 +108,6 @@ class _UsersPageState extends State<UsersPage> {
   }
 
   Future<bool> _tryRole() async {
-    UserRepository _userRepo = UserRepository();
     User? _user = FirebaseAuth.instance.currentUser;
     if (_user != null && !_user.isAnonymous){
       final String? check = await _userRepo.getUserRoleByUid(_user.uid);
@@ -113,7 +127,54 @@ class _UsersPageState extends State<UsersPage> {
       print("User is Unknown");
       return false;
     }
+  }
+  /// Devuelve true si contiene caracteres no alfanumericos y false si no los contiene
+  bool _containsCharNoAlfanumeric(String texto) {
+    final alfanumerico = RegExp(r'^[a-zA-Z0-9 _\-\:\.\,áéíóúüÁÉÍÓÚÜñÑ]+$');
+    return !alfanumerico.hasMatch(texto);
+  }
 
+  Future<List<Map<String, dynamic>>?> _searchUser(String query) async {
+    if (_containsCharNoAlfanumeric(query) == true) {
+      return [];
+    } else {
+      try {
+        final List<Map<String, dynamic>>? users = await _userRepo.getUsersByQuery(query);
+        if (users == null) {
+          return [];
+        } else {
+          if (users.isNotEmpty) {
+            return users;
+          } else {
+            return [];
+          }
+        }
+      } catch (error) {
+        print("Error in Search");
+        return null;
+      }
+    }
+
+  }
+
+  Future<List<Map<String,dynamic>>?> _manageUsers() async {
+    List<Map<String, dynamic>>? users = [];
+    try {
+      users = await _userRepo.getAllUsers();
+      if (users != null) {
+        if (users.isNotEmpty) {
+          return users;
+        } else {
+          print("Se recibieron datos vacíos");
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } catch (error) {
+      print("HUBO UN ERROR BUSCANDO USUARIOS");
+      return null;
+    }
   }
 
   @override
@@ -149,13 +210,114 @@ class _UsersPageState extends State<UsersPage> {
 
               /// CONTENT
               Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      SizedBox(height: 50,),
+                      Text(
+                        'USERS MANAGE PAGE',
+                        style: TextStyle(
+                          color: Color(0xFF000000),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 50,),
+                      Row(
+                        children: [
+                          SizedBox(width: 20,),
+                          SizedBox(
+                            width: 300, height: 50,
+                            child: SearchBar(
+                              backgroundColor: WidgetStatePropertyAll(Color(
+                                  0xFFDDDBDB)),
+                              hintText: 'Search a User...',
+                              hintStyle: WidgetStatePropertyAll(
+                                TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                                  fontSize: 20,
+                                ),
+                              ),
+                              leading: Icon(Icons.search),
+                              onChanged: (text) {
+                                setState(() {
+                                  _searchText = text;
+                                  if (text.isEmpty) {
+                                    _closeSearch();
+                                  } else {
+                                    _toggleSearch();
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 40,),
+                      if (!_searchStatus) ...[
+                        FutureBuilder<List<Map<String, dynamic>>?>(
+                          future: _manageUsers(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return CircularProgressIndicator();
+                            } else if (snapshot.hasError) {
+                              return Text('THERE WAS AN ERROR GETTING THE USERS');
+                            } else if (snapshot.hasData) {
+                              if(snapshot.data == null) {
+                                return Text('DATA IS NULL');
+                              } else if (snapshot.data!.isEmpty) {
+                                return Text('BUT NOBODY COMES...');
+                              } else {
+                                return Column(
+                                  children: snapshot.data!.map((user) => Column(
+                                    children: [
+                                      ShowUserComponent(user: user),
+                                      SizedBox(height: 20,),
+                                    ],
+                                  ),
+                                  ).toList(),
+                                );
+                              }
+                            } else {
+                              return Text('THERE WAS A UNEXPECTED ERROR');
+                            }
+                          },
+                        ),
                       ],
-                    ),
+                      if (_searchStatus) ...[
+                        FutureBuilder(
+                          future: _searchUser(_searchText),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return CircularProgressIndicator();
+                            } else if (snapshot.hasError) {
+                              return Text('Search result has errors');
+                            } else if (snapshot.hasData) {
+                              if (snapshot.data!.isEmpty) {
+                                return Text('Found no Users match');
+                              } else {
+                                return Column(
+                                  children: snapshot.data!.map((user) => Column(
+                                    children: [
+                                      ShowUserComponent(user: user),
+                                      SizedBox(height: 20,),
+                                    ],
+                                  ),
+                                  ).toList(),
+                                );
+                              }
+                            } else {
+                              return Text('Search has unexpected error');
+                            }
+                          },
+                        ),
+                      ],
+
+
+                    ],
                   ),
+                ),
               ),
 
             ],
@@ -197,15 +359,15 @@ class _UsersPageState extends State<UsersPage> {
                           children: [
                             ListTile(
                               title: Text("Users Page", style: TextStyle(color: Colors.white)),
-                              onTap: () {},
+                              onTap: () {Get.toNamed(Routes.manageUsers);},
                             ),
                             ListTile(
                               title: Text("Games Page", style: TextStyle(color: Colors.white)),
-                              onTap: () {},
+                              onTap: () {Get.toNamed(Routes.manageGames);},
                             ),
                             ListTile(
                               title: Text("Comments Page", style: TextStyle(color: Colors.white)),
-                              onTap: () {},
+                              onTap: () {Get.toNamed(Routes.manageComments);},
                             ),
                           ],
                         );

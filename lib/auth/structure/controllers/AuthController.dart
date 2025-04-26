@@ -11,6 +11,10 @@ class AuthController extends GetxController {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController nameController = TextEditingController();
+  TextEditingController roleController = TextEditingController();
+  TextEditingController imagePathController = TextEditingController();
+  TextEditingController statusController = TextEditingController();
+  TextEditingController weightController = TextEditingController();
 
   Rxn<User?> firebaseUser = Rxn<User?>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
