@@ -1,7 +1,10 @@
 
+import 'package:game_box/pages/CommentsManagePage.dart';
 import 'package:game_box/pages/CommentsPage.dart';
+import 'package:game_box/pages/GamesManagePage.dart';
 import 'package:game_box/pages/HomePage.dart';
 import 'package:game_box/pages/LoadingPage.dart';
+import 'package:game_box/pages/UsersManagePage.dart';
 import 'package:get/get.dart';
 import '../pages/GamePage.dart';
 import '../pages/LoginPage.dart';
@@ -38,6 +41,18 @@ class AppPages {
     GetPage(
       name: Routes.comments,
       page: () => const CommentsPage(),
+    ),
+    GetPage(
+      name: Routes.manageUsers,
+      page: () => const UsersManagePage(),
+    ),
+    GetPage(
+      name: Routes.manageGames,
+      page: () => const GamesManagePage(),
+    ),
+    GetPage(
+      name: Routes.manageComments,
+      page: () => const CommentsManagePage(),
     ),
   ];
 }

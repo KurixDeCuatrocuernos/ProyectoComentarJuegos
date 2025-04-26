@@ -6,4 +6,7 @@ class Routes {
   static const game = '/games';
   static const profile = '/profile';
   static const comments = '/comments';
+  static const manageUsers = '/manage/users';
+  static const manageGames = '/manage/games';
+  static const manageComments = '/manage/comments';
 }
