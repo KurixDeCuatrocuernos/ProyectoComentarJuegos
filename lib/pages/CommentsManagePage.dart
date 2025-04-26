@@ -1,9 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:game_box/components/UserCommentsListComponent.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 import '../auth/structure/controllers/AuthController.dart';
 import '../components/SearchPlaceholder.dart';
@@ -14,16 +12,25 @@ import '../components/UserName.dart';
 import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
 
-class CommentsPage extends StatefulWidget {
-  const CommentsPage({super.key});
+class CommentsManagePage extends StatefulWidget {
+  const CommentsManagePage({super.key});
 
   @override
-  State<CommentsPage> createState() => _CommentsPageState();
+  State<CommentsManagePage> createState() => _CommentsManagePageState();
 }
 
-class _CommentsPageState extends State<CommentsPage> {
+class _CommentsManagePageState extends State<CommentsManagePage> {
 
+  AuthController _authController = AuthController();
   bool _isSidebarOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkRole();
+  }
+
+
 
   void _toggleSidebar() {
     setState(() {
@@ -36,8 +43,6 @@ class _CommentsPageState extends State<CommentsPage> {
       _isSidebarOpen = false;
     });
   }
-
-  AuthController _authController = AuthController();
 
   void _signOut() {
     showDialog(
@@ -57,13 +62,34 @@ class _CommentsPageState extends State<CommentsPage> {
               child: Text('Yes'),
               onPressed: () {
                 _authController.signOut();
-                Get.offAllNamed(Routes.login);
+                Get.offAllNamed(Routes.login);// Llamar a la función para cerrar sesión
               },
             ),
           ],
         );
       },
     );
+  }
+
+  void _checkRole() async {
+    UserRepository _userRepo = UserRepository();
+    User? _user = FirebaseAuth.instance.currentUser;
+    if (_user != null && !_user.isAnonymous){
+      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
+      if (check != null) {
+        if(check != "ADMIN") {
+          /// If user is not an Admin, we redirect to HomePage
+          print("User is not an Admin");
+          Get.offAllNamed(Routes.home);
+        }
+      } else {
+        print("The database returned null");
+        Get.offAllNamed(Routes.home);
+      }
+    } else {
+      print("User is Unknown");
+      Get.offAllNamed(Routes.home);
+    }
   }
 
   Future<bool> _tryRole() async {
@@ -87,6 +113,7 @@ class _CommentsPageState extends State<CommentsPage> {
       print("User is Unknown");
       return false;
     }
+
   }
 
   @override
@@ -120,16 +147,15 @@ class _CommentsPageState extends State<CommentsPage> {
                 backgroundColor: Colors.black,
               ),
 
-              ///Content
+              /// CONTENT
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      SizedBox(height: 20,),
-
-                      UserCommentsListComponent(),
-
-
+                      SizedBox(height: 50,),
+                      Center(
+                        child: Text('COMMENTS MANAGE PAGE', style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),),
+                      ),
                     ],
                   ),
                 ),
@@ -161,8 +187,8 @@ class _CommentsPageState extends State<CommentsPage> {
                 children: [
                   SizedBox(height: 50),
                   ListTile(
-                    title: Text("Inicio", style: TextStyle(color: Colors.white)),
-                    onTap: () => Get.offAllNamed(Routes.home),
+                    title: Text("Comentarios", style: TextStyle(color: Colors.white)),
+                    onTap: () => Get.offAllNamed(Routes.comments),
                   ),
                   FutureBuilder<bool>(
                     future: _tryRole(),
@@ -202,4 +228,3 @@ class _CommentsPageState extends State<CommentsPage> {
     );
   }
 }
-

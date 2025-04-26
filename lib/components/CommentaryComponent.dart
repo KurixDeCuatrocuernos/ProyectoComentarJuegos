@@ -119,7 +119,7 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                         validator: commentaryValidator.isValidCommentary,
                         controller: commentaryController.commentController,
                         decoration: const InputDecoration(
-                          hintText: '¿What do you think about the videogame?',
+                          hintText: 'What do you think about the videogame?',
                         ),
                       ),
                     ),

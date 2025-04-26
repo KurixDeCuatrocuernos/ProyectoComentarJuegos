@@ -49,11 +49,12 @@ class CommentaryController extends GetxController {
         .collection(_collectionG).doc(game['id'].toString()).set({
       'id': game['id'],
       'name': game['name'],
+      'name_lowercase': game['name'].toString().toLowerCase(),
       'summary': game['summary'],
       'rating': game['rating'],
       'cover': game['cover'],
       'url': URL,
-      'first_release_date': rawTimestamp != null ? convertedDate : null,
+      'first_release_date': rawTimestamp != null ? convertedDate : 'null',
     }, SetOptions(merge: true));
   }
 
