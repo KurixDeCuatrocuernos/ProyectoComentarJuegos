@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/components/ProfileComponent.dart';
@@ -10,6 +11,7 @@ import '../components/SearchResults.dart';
 import '../components/ToolBar.dart';
 import '../components/UserImage.dart';
 import '../components/UserName.dart';
+import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -62,6 +64,29 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       },
     );
+  }
+
+  Future<bool> _tryRole() async {
+    UserRepository _userRepo = UserRepository();
+    User? _user = FirebaseAuth.instance.currentUser;
+    if (_user != null && !_user.isAnonymous){
+      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
+      if (check != null) {
+        if(check=="ADMIN") {
+          print("USER IS ADMIN");
+          return true;
+        } else {
+          print("User is not an Admin");
+          return false;
+        }
+      } else {
+        print("The database returned null");
+        return false;
+      }
+    } else {
+      print("User is Unknown");
+      return false;
+    }
   }
 
   @override
@@ -128,9 +153,32 @@ class _ProfilePageState extends State<ProfilePage> {
                     title: Text("Inicio", style: TextStyle(color: Colors.white)),
                     onTap: () => Get.offAllNamed(Routes.home),
                   ),
-                  ListTile(
-                    title: Text("Comentarios", style: TextStyle(color: Colors.white)),
-                    onTap: () => Get.offAllNamed(Routes.comments),
+                  FutureBuilder<bool>(
+                    future: _tryRole(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasData && snapshot.data == true) {
+                        return Column(
+                          children: [
+                            ListTile(
+                              title: Text("Users Page", style: TextStyle(color: Colors.white)),
+                              onTap: () {Get.toNamed(Routes.manageUsers);},
+                            ),
+                            ListTile(
+                              title: Text("Games Page", style: TextStyle(color: Colors.white)),
+                              onTap: () {Get.toNamed(Routes.manageGames);},
+                            ),
+                            ListTile(
+                              title: Text("Comments Page", style: TextStyle(color: Colors.white)),
+                              onTap: () {Get.toNamed(Routes.manageComments);},
+                            ),
+                          ],
+                        );
+                      } else {
+                        return SizedBox(); // No es admin o error
+                      }
+                    },
                   ),
                 ],
               ),
