@@ -27,14 +27,14 @@ class CommentaryComponent extends StatefulWidget {
 
 class _CommentaryComponentState extends State<CommentaryComponent> {
   final _formKey = GlobalKey<FormState>();
-  late CommentaryController commentaryController;
-  late CommentaryValidator commentaryValidator;
+  late CommentaryController _commentController;
+  late CommentaryValidator _commentValidator;
 
   @override
   void initState() {
     super.initState();
-    commentaryController = CommentaryController();
-    commentaryValidator = CommentaryValidator();
+    _commentController = CommentaryController();
+    _commentValidator = CommentaryValidator();
 
     if (widget.edit) {
       print("SE VA A EDITAR EL COMENTARIO");
@@ -42,15 +42,21 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
     }
   }
 
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
   Future<void> _isEditing() async {
     print("EDITANDO COMENTARIO");
     User? user = FirebaseAuth.instance.currentUser;
-    Map<String, dynamic>? commentary = await CommentaryRepository().getCommentaryByUserAndGame(user!, widget.game!);
+    Map<String, dynamic>? commentary = await CommentaryRepository().getCommentaryByUserAndGame(user!, widget.game);
 
     if (commentary != null) {
-      commentaryController.titleController.text = commentary?['title'];
-      commentaryController.commentController.text = commentary?['body'];
-      commentaryController.sliderController.value = commentary?['value'];
+      _commentController.titleController.text = commentary['title'];
+      _commentController.commentController.text = commentary['body'];
+      _commentController.sliderController.value = commentary['value'];
     } else {
       print("COMENTARIO RECOGIDO NO DISPONIBLE");
     }
@@ -198,8 +204,8 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                   Flexible(
                     child: TextFormField(
                       style: TextStyle(color: Colors.white),
-                      validator: commentaryValidator.isValidCommentary,
-                      controller: commentaryController.titleController,
+                      validator: _commentValidator.isValidCommentary,
+                      controller: _commentController.titleController,
                       decoration: const InputDecoration(
                         hintText: 'Resume your opinion about this videogame in a few words',
                       ),
@@ -211,8 +217,8 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                     child: SingleChildScrollView(
                       child: TextFormField(
                         style: TextStyle(color: Colors.white),
-                        validator: commentaryValidator.isValidCommentary,
-                        controller: commentaryController.commentController,
+                        validator: _commentValidator.isValidCommentary,
+                        controller: _commentController.commentController,
                         decoration: const InputDecoration(
                           hintText: 'What do you think about the videogame?',
                         ),
@@ -224,7 +230,7 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                     return Column(
                       children: [
                         Text(
-                          "${commentaryController.sliderController.value}",
+                          "${_commentController.sliderController.value}",
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.white,
@@ -232,16 +238,16 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                           ),
                         ),
                         Slider(
-                          value: commentaryController.sliderController.value.toDouble(),
+                          value: _commentController.sliderController.value.toDouble(),
                           min: 0,
                           max: 100,
                           divisions: 100,
-                          label: '${commentaryController.sliderController.value}',
+                          label: '${_commentController.sliderController.value}',
                           onChanged: (double newValue) {
-                            commentaryController.sliderController.value = newValue.toInt();
+                            _commentController.sliderController.value = newValue.toInt();
                           },
                         ),
-                        Text(commentaryValidator.isValidValue(commentaryController.sliderController.value.toString()) ?? ''),
+                        Text(_commentValidator.isValidValue(_commentController.sliderController.value.toString()) ?? ''),
                       ],
                     );
                   }),
@@ -258,9 +264,9 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                               if (widget.edit==true){
                                 print("EDITANDO COMENTARIO");
                                 Map<String, dynamic> comment = {
-                                  'title': commentaryController.titleController.text,
-                                  'body': commentaryController.commentController.text,
-                                  'value': commentaryController.sliderController.value,
+                                  'title': _commentController.titleController.text,
+                                  'body': _commentController.commentController.text,
+                                  'value': _commentController.sliderController.value,
                                   'editedAt': Timestamp.now(),
                                 };
                                 bool isEdited = await _editComment(comment);
@@ -272,9 +278,9 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                               } else {
                                 print("GUARDANDO NUEVO COMENTARIO");
                                 Map<String, dynamic> comment = {
-                                  'title': commentaryController.titleController.text,
-                                  'body': commentaryController.commentController.text,
-                                  'value': commentaryController.sliderController.value,
+                                  'title': _commentController.titleController.text,
+                                  'body': _commentController.commentController.text,
+                                  'value': _commentController.sliderController.value,
                                   'createdAt': Timestamp.now(),
                                 };
                                 bool isCommented = await _addComment(comment);

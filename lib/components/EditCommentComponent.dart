@@ -28,6 +28,13 @@ class _EditCommentComponentState extends State<EditCommentComponent> {
     _setData();
   }
 
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+
   void _setData() {
     _commentController.idController.text = widget.comment['id'];
     _commentController.titleController.text = widget.comment['title'];
