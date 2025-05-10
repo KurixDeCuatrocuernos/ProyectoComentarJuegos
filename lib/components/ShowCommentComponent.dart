@@ -8,6 +8,7 @@ import 'package:game_box/repository/UserRepository.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../auth/models/UserModel.dart';
 import '../routes/AppRoutes.dart';
 import 'EditCommentComponent.dart';
 
@@ -90,7 +91,7 @@ class ShowCommentComponent extends StatelessWidget {
       );
     }
 
-    Widget _showDialogUser(Map<String,dynamic> user) {
+    Widget _showDialogUser(UserModel user) {
       return Dialog(
         child: Container(
           decoration: _dialogStyle,
@@ -142,10 +143,10 @@ class ShowCommentComponent extends StatelessWidget {
       );
     }
 
-    Future<Map<String, dynamic>?> _getUser(String id) async {
+    Future<UserModel?> _getUser(String id) async {
       try {
         UserRepository _userRepo = UserRepository();
-        Map<String, dynamic>? user = await _userRepo.getUserByUid(id);
+        UserModel? user = await _userRepo.getUserByUid(id);
         return user;
       } catch (error) {
         print("HUBO UN ERROR AL RECOGER LOS DATOS DEL USUARIO");
@@ -375,7 +376,7 @@ class ShowCommentComponent extends StatelessWidget {
                             maxLines: 1,
                           ),
                           onPressed: () async {
-                            Map<String, dynamic>? user = await _getUser(comment['userId']);
+                            UserModel? user = await _getUser(comment['userId']);
                             if (user == null) {
                               Get.dialog(_showDialogText("USER DATA ERROR"));
                             } else {

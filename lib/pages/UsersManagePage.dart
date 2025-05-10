@@ -3,8 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/components/ShowUserComponent.dart';
+import 'package:game_box/viewModels/UserViewModel.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 
+import '../auth/models/UserModel.dart';
 import '../auth/structure/controllers/AuthController.dart';
 import '../components/SearchPlaceholder.dart';
 import '../components/SearchResults.dart';
@@ -134,12 +137,12 @@ class _UsersManagePageState extends State<UsersManagePage> {
     return !alfanumerico.hasMatch(texto);
   }
 
-  Future<List<Map<String, dynamic>>?> _searchUser(String query) async {
+  Future<List<UserModel>?> _searchUser(String query) async {
     if (_containsCharNoAlfanumeric(query) == true) {
       return [];
     } else {
       try {
-        final List<Map<String, dynamic>>? users = await _userRepo.getUsersByQuery(query);
+        final List<UserModel>? users = await _userRepo.getUsersByQuery(query);
         if (users == null) {
           return [];
         } else {
@@ -157,22 +160,32 @@ class _UsersManagePageState extends State<UsersManagePage> {
 
   }
 
-  Future<List<Map<String,dynamic>>?> _manageUsers() async {
-    List<Map<String, dynamic>>? users = [];
+  Future<List<UserModel>?> _manageUsers() async {
     try {
-      users = await _userRepo.getAllUsers();
-      if (users != null) {
-        if (users.isNotEmpty) {
-          return users;
+      List<UserModel>? users = [];
+      print("SE HA PASADO POR _manageUsers()");
+      if (context.watch<UserViewModel>().users.isNotEmpty) {
+        users = context.read<UserViewModel>().users;
+        print("SE DEVOLVIÓ PROVIDER $users");
+        return users;
+      } else {
+        print("SE BUSCÓ EN LA BASE DE DATOS");
+        users = await _userRepo.getAllUsers();
+        if (users != null) {
+          if (users.isNotEmpty) {
+            final userList = context.read<UserViewModel>();
+            userList.addAllUsers(users);
+            return users;
+          } else {
+            print("Se recibieron datos vacíos");
+            return null;
+          }
         } else {
-          print("Se recibieron datos vacíos");
           return null;
         }
-      } else {
-        return null;
       }
     } catch (error) {
-      print("HUBO UN ERROR BUSCANDO USUARIOS");
+      print("HUBO UN ERROR BUSCANDO USUARIOS $error");
       return null;
     }
   }
@@ -256,7 +269,7 @@ class _UsersManagePageState extends State<UsersManagePage> {
                       ),
                       SizedBox(height: 40,),
                       if (!_searchStatus) ...[
-                        FutureBuilder<List<Map<String, dynamic>>?>(
+                        FutureBuilder<List<UserModel>?>(
                           future: _manageUsers(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {

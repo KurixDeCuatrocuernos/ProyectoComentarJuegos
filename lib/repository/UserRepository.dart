@@ -1,6 +1,9 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:game_box/auth/models/UserModel.dart';
+import 'package:game_box/auth/models/UserProjection.dart';
+import 'package:game_box/auth/services/AuthFirebaseRepository.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/get_utils.dart';
@@ -10,7 +13,7 @@ class UserRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final String _collection = 'users';
 
-  Future<Map<String, dynamic>?> _getCurrentUserData() async{
+  Future<UserModel?> _getCurrentUserData() async{
     String? uid = await _auth.currentUser?.uid;
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection(_collection)
@@ -18,7 +21,7 @@ class UserRepository {
           .get();
 
       if (userDoc.exists) {
-        return userDoc.data() as Map<String, dynamic>;
+        return UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
       } else {
         print('Usuario no encontrado en Firestore');
         return null;
@@ -29,7 +32,7 @@ class UserRepository {
     }
   }
 
-  Future<Map<String, dynamic>?> _getUserDataByUid(String uid) async{
+  Future<UserModel?> _getUserDataByUid(String uid) async{
 
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection(_collection)
@@ -37,7 +40,7 @@ class UserRepository {
           .get();
 
       if (userDoc.exists) {
-        return userDoc.data() as Map<String, dynamic>;
+        return UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
       } else {
         print('Usuario no encontrado en Firestore');
         return null;
@@ -237,31 +240,37 @@ class UserRepository {
     }
   }
 
-  Future <List<Map<String, dynamic>>?> getAllUsers() async {
+  Future <List<UserModel>?> getAllUsers() async {
+    //print("RECOGIENDO TODOS LOS DATOS DE LOS USUARIOS");
     try {
       final QuerySnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
           .get();
+      //print("EL FALLO OCURRE DESPUÉS DE LA CONSULTA");
       if (response.docs.isNotEmpty) {
+
         return response.docs.map((doc) {
           final data = doc.data();
+          //print("SE HA RECOGIDO: $data");
           if(data is Map<String, dynamic>) {
-            return data;
+            //print("Map recibido: $data");
+            return UserModel.fromMap(data);
           } else {
-            print("Documento con Formato inesperado: $doc");
-            return <String, dynamic>{};
+            //print("Documento con Formato inesperado: $doc");
+            return null;
           }
-        }).toList();
+        }).whereType<UserModel>().toList();
       } else {
         return null;
       }
     } catch (error) {
+      //print("EL ERROR OCURRE EN getAllUsers");
       print("Hubo un error al conectar a la base de datos: $error");
       return null;
     }
   }
 
-  Future<List<Map<String, dynamic>>?> getUsersByQuery(String query) async {
+  Future<List<UserModel>?> getUsersByQuery(String query) async {
     try{
       final QuerySnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
@@ -272,16 +281,17 @@ class UserRepository {
         return response.docs.map((doc) {
           final data = doc.data();
           if(data is Map<String, dynamic>) {
-            return data;
+            return UserModel.fromMap(data);
           } else {
             print("Documento con Formato inesperado: $doc");
-            return <String, dynamic>{};
+            return null;
           }
-        }).toList();
+        }).whereType<UserModel>().toList();
       } else {
         return [];
       }
     } catch (error) {
+      print("EL ERROR OCURRE EN getUsersByQuery");
       print("Hubo un error al conectar a la base de datos: $error");
       return null;
     }
@@ -337,18 +347,33 @@ class UserRepository {
     }
   }
 
-  Future<bool> updateUser(Map<String, dynamic> userData) async {
+  Future<bool> updateUser(UserModel userData) async {
+    String uid = userData.uid;
+    print("USUARIO A MODIFICAR: $uid");
     try {
-      final batch = FirebaseFirestore.instance.batch();
-      /// Terminar el metodo invocando a update email
-      return true;
+      final DocumentSnapshot oldUser = await FirebaseFirestore.instance
+          .collection(_collection)
+          .doc(uid)
+          .get();
+      if (oldUser.exists) {
+        if (oldUser.data() != userData.toMap()) {
+          await FirebaseFirestore.instance
+              .collection(_collection)
+              .doc(uid)
+              .update(userData.toMap());
+        }
+        return true;
+      } else {
+        print("The user with uid: $uid doesn't exists");
+        return false;
+      }
     } catch (error) {
       print("Hubo un error al conectar con la base de datos: $error");
       return false;
     }
   }
 
-  Future<List<Map<String, String>>> getUsersUidByQuery(String query) async {
+  Future<List<UserProjection>> getUsersUidByQuery(String query) async {
     try {
       final QuerySnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
@@ -356,9 +381,9 @@ class UserRepository {
           .where('name', isLessThanOrEqualTo: query + '\uf8ff')
           .get();
       if (response.docs.isNotEmpty) {
-        List<Map<String, String>> users = [];
+        List<UserProjection> users = [];
         for(var user in response.docs) {
-          users.add({'uid': user['uid']});
+          users.add(UserProjection.fromMap(user.data() as Map<String, dynamic>));
         }
         return users;
       } else {
@@ -371,14 +396,14 @@ class UserRepository {
     }
   }
 
-  Future<Map<String, dynamic>?> getUserByUid(String id) async {
+  Future<UserModel?> getUserByUid(String id) async {
     try {
       final DocumentSnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
           .doc(id)
           .get();
       if (response.exists) {
-        return response.data() as Map<String, dynamic>;
+        return UserModel.fromMap(response.data() as Map<String, dynamic>);
       } else {
         return null;
       }

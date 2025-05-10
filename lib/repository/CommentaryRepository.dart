@@ -1,6 +1,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:game_box/auth/models/UserProjection.dart';
 import 'package:game_box/repository/GameRepository.dart';
 import 'package:game_box/repository/UserRepository.dart';
 import 'package:get/get.dart';
@@ -239,10 +240,10 @@ class CommentaryRepository {
       UserRepository _userRepo = UserRepository();
       GameRepository _gameRepo = GameRepository();
 
-      final List<Map<String, String>> users = await _userRepo.getUsersUidByQuery(query);
+      final List<UserProjection> users = await _userRepo.getUsersUidByQuery(query);
       final List<Map<String, int>> games = await _gameRepo.getGamesIdByQuery(query);
 
-      final List<String> userIds = users.map((user) => user['uid']!).toList();
+      final List<String> userIds = users.map((user) => user.uid).toList();
       final List<int> gameIds = games.map((game) => game['id']!).toList();
       // Mapa para evitar duplicados por document ID
       Map<String, Map<String, dynamic>> commentMap = {};

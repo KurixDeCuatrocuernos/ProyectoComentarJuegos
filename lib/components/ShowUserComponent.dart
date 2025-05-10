@@ -5,11 +5,12 @@ import 'package:game_box/repository/UserRepository.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../auth/models/UserModel.dart';
 import '../routes/AppRoutes.dart';
 import 'EditUserComponent.dart';
 
 class ShowUserComponent extends StatelessWidget {
-  final Map<String, dynamic> user;
+  final UserModel user;
   const ShowUserComponent({super.key, required this.user});
 
   String _formatDateTime(dynamic rawDate) {
@@ -31,7 +32,7 @@ class ShowUserComponent extends StatelessWidget {
   Future<bool> _deleteUser() async {
     try {
       UserRepository _userRepo = UserRepository();
-      final bool response = await _userRepo.deleteUserByUid(user['uid']);
+      final bool response = await _userRepo.deleteUserByUid(user.uid);
       return response;
     } catch (error) {
       print("Error deleting the user");
@@ -97,7 +98,7 @@ class ShowUserComponent extends StatelessWidget {
   Future<bool> _banUser() async {
     try {
       UserRepository _userRepo = UserRepository();
-      final bool response = await _userRepo.banUserByUid(user['uid']);
+      final bool response = await _userRepo.banUserByUid(user.uid);
       return response;
     } catch (error) {
       print('Hubo un error al bannear al usuario $error');
@@ -161,7 +162,7 @@ class ShowUserComponent extends StatelessWidget {
   Future<bool> _unbanUser() async {
     try {
       UserRepository _userRepo = UserRepository();
-      final bool response = await _userRepo.unbanUserByUid(user['uid']);
+      final bool response = await _userRepo.unbanUserByUid(user.uid);
       return response;
     } catch (error) {
       print('Hubo un error al bannear al usuario $error');
@@ -228,7 +229,7 @@ class ShowUserComponent extends StatelessWidget {
       width: 400,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: user['status']==5 ? Color(0xFF4E0101) : Colors.black,
+        color: user.status==5 ? Color(0xFF4E0101) : Colors.black,
       ),
       child: Column(
         children: [
@@ -239,9 +240,9 @@ class ShowUserComponent extends StatelessWidget {
                 children: [
                   SizedBox(height: 10,),
                   Text(
-                    'Username: ${user['name'] ?? 'NULL'}',
+                    'Username: ${user.name ?? 'NULL'}',
                     style: TextStyle(
-                      color: user['status']==5 ? Colors.black : Colors.white,
+                      color: user.status ==5 ? Colors.black : Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -249,9 +250,9 @@ class ShowUserComponent extends StatelessWidget {
                   ),
                   SizedBox(height: 10,),
                   Text(
-                    'Email: ${user['email'] ?? 'NULL'}',
+                    'Email: ${user.email ?? 'NULL'}',
                     style: TextStyle(
-                      color: user['status']==5 ? Colors.black : Colors.white,
+                      color: user.status ==5 ? Colors.black : Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -259,9 +260,9 @@ class ShowUserComponent extends StatelessWidget {
                   ),
                   SizedBox(height: 10,),
                   Text(
-                    'Start Date: ${_formatDateTime(user['createdAt'])}',
+                    'Start Date: ${_formatDateTime(user.createdAt)}',
                     style: TextStyle(
-                      color: user['status']==5 ? Colors.black : Colors.white,
+                      color: user.status ==5 ? Colors.black : Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -269,9 +270,9 @@ class ShowUserComponent extends StatelessWidget {
                   ),
                   SizedBox(height: 10,),
                   Text(
-                    'Role: ${user['role'] ?? 'NULL'}',
+                    'Role: ${user.role ?? 'NULL'}',
                     style: TextStyle(
-                      color: user['status']==5 ? Colors.black : Colors.white,
+                      color: user.status == 5 ? Colors.black : Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -300,14 +301,14 @@ class ShowUserComponent extends StatelessWidget {
                    _showDeleteUser(context);
                   },
                 ),
-                if (user['status'] != 5)
+                if (user.status != 5)
                 IconButton(
                   icon: Icon(Icons.cancel_outlined, size: 32,),
                   onPressed: () {
                     _showBanUser(context);
                   },
                 ),
-                if (user['status'] == 5)
+                if (user.status == 5)
                 IconButton(
                   icon: Icon(Icons.check_circle_outline_outlined, size: 32,),
                   onPressed: () {

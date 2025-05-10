@@ -6,6 +6,7 @@ import 'package:game_box/firebase_options.dart';
 import 'package:game_box/games/services/IgdbApiRepository.dart';
 import 'package:game_box/routes/AppPages.dart';
 import 'package:game_box/routes/AppRoutes.dart';
+import 'package:game_box/viewModels/UserViewModel.dart';
 import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +31,7 @@ void main() async {
     MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => SearchResultsUtil()),
+          ChangeNotifierProvider(create: (_) => UserViewModel()),
           Provider<IgdbApiRepository>.value(value: igdbRepo),
         ],
     child: MyApp(),
