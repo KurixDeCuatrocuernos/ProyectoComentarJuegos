@@ -2,8 +2,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:game_box/games/services/IgdbApiRepository.dart';
-import 'package:game_box/games/services/IgdbApiTestService.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:provider/provider.dart';
 
 import '../games/utils/SearchResultsUtil.dart';
@@ -16,6 +18,7 @@ class SearchPlaceholder extends StatefulWidget {
 }
 
 class _SearchPlaceholderState extends State<SearchPlaceholder> {
+
   final FocusNode _focusNode = FocusNode();
 
   @override
@@ -71,7 +74,14 @@ class _SearchPlaceholderState extends State<SearchPlaceholder> {
             height: 80,
             child: TextField(
               focusNode: _focusNode,
-              onChanged: (query) => _searchGames(context, query),
+              onChanged: (query) {
+                if(query.isNotEmpty) {
+                  _searchGames(context, query);
+                } else {
+
+                }
+
+              },
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.grey,
