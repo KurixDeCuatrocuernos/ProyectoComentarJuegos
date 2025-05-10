@@ -95,10 +95,7 @@ class GameComponent extends StatelessWidget {
   /// verificamos si el usuario ha comentado o no este juego
     CommentaryRepository _commentRepo = CommentaryRepository();
     User? _user = FirebaseAuth.instance.currentUser;
-    bool cell = false;
-    if (_user != null){
-      cell = await _commentRepo.getIfUserHasCommentedThisGame(_user!, game);
-    }
+    bool cell = await _commentRepo.getIfUserHasCommentedThisGame(_user!, game);
     return cell;
   }
 
@@ -208,7 +205,7 @@ class GameComponent extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             FutureBuilder<bool>(
-              future: _isCommented(), // tu función async que devuelve Future<bool>
+              future: _isCommented(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   // Mientras espera el resultado del future

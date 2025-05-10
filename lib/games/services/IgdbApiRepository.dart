@@ -99,7 +99,7 @@ class IgdbApiRepository {
     } else if (response.statusCode == 429) {
       ///If we recieve 429 status code means too much queries at the same time
       await initToken(); /// regenerate the access token
-      return getGames(id); /// we call the same method (we make callback)
+      return getGameById(id); /// we call the same method (we make callback)
     } else {
       throw Exception('Error in query: ${response.statusCode}');
     }
