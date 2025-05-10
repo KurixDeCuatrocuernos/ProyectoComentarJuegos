@@ -30,12 +30,20 @@ class _ProfileComponentState extends State<ProfileComponent> {
   String? usermail;
   final double _size = 90;
   final _formImage = GlobalKey<FormState>();
+  late TextEditingController _urlController;
 
   @override
   void initState() {
     super.initState();
     _loadUserImage();
     _setUserData();
+    _urlController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
   }
 
   Future<void> _setUserData() async {
@@ -247,7 +255,6 @@ class _ProfileComponentState extends State<ProfileComponent> {
   }
 
   void _changeImage(BuildContext context) {
-    TextEditingController _urlController = TextEditingController();
 
     showDialog(
       context: context,

@@ -22,7 +22,7 @@ class AuthFirebaseRepository {
       if (user != null) {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'uid': user.uid,
-          'name': name,
+          'name': name[0].toUpperCase()+name.substring(1).toLowerCase(),
           'email': email,
           'createdAt': FieldValue.serverTimestamp(), // creation account's date
           'weight': 1.0, // User's default weight

@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_launcher_icons/constants.dart';
+import 'package:game_box/auth/models/UserModel.dart';
 import 'package:game_box/repository/UserRepository.dart';
 import 'package:get/get.dart';
 
@@ -11,7 +12,7 @@ import '../auth/structure/controllers/AuthController.dart';
 import '../auth/utils/FormValidator.dart';
 
 class EditUserComponent extends StatefulWidget {
-  final Map<String,dynamic> user;
+  final UserModel user;
   const EditUserComponent({super.key, required this.user});
 
   @override
@@ -39,15 +40,15 @@ class _EditUserComponentState extends State<EditUserComponent> {
   Future<bool> _submitForm() async {
     try {
       UserRepository _userRepo = UserRepository();
-      Map<String, dynamic> newUser = {
-        'uid': widget.user['uid'].toString(),
-        'name': _authController.nameController.text,
-        'email': _authController.emailController.text,
-        'role': _authController.roleController.text,
-        'weight': _authController.weightController.text,
-        'status': _authController.statusController.text,
-        'image': _authController.imagePathController.text,
-      };
+      UserModel newUser = UserModel(
+        uid: widget.user.uid.toString(),
+        name: _authController.nameController.text,
+        email: _authController.emailController.text,
+        role: _authController.roleController.text,
+        weight: double.parse(_authController.weightController.text),
+        status: int.parse(_authController.statusController.text),
+        image: _authController.imagePathController.text,
+      );
       bool cell = await _userRepo.updateUser(newUser);
       return cell;
     } catch (error) {
@@ -57,12 +58,12 @@ class _EditUserComponentState extends State<EditUserComponent> {
   }
 
   void _setFormData() {
-    _authController.nameController.text = widget.user['name'].toString();
-    _authController.emailController.text = widget.user['email'].toString();
-    _authController.roleController.text = widget.user['role'].toString();
-    _authController.weightController.text = widget.user['weight'].toString();
-    _authController.statusController.text = widget.user['status'].toString();
-    _authController.imagePathController.text = widget.user['image'].toString();
+    _authController.nameController.text = widget.user.name.toString();
+    _authController.emailController.text = widget.user.email.toString();
+    _authController.roleController.text = widget.user.role.toString();
+    _authController.weightController.text = widget.user.weight.toString();
+    _authController.statusController.text = widget.user.status.toString();
+    _authController.imagePathController.text = widget.user.image.toString();
   }
 
   @override
@@ -145,6 +146,7 @@ class _EditUserComponentState extends State<EditUserComponent> {
                     child: TextFormField(
                       controller: _authController.emailController,
                       validator: _formValidator.isValidEmail,
+                      readOnly: true,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.grey,

@@ -20,10 +20,10 @@ class CommentaryValidator {
   }
 
   String? isValidTitle(String? text) {
-    if (text == null || text.isEmpty || text.length<10) {
+    if (text == null || text.isEmpty || text.length<5) {
       return "This title is too short";
-    } else if (text.length>50) {
-      return "This title is too long";
+    } else if (text.length>30) {
+      return "This title is too long (max 30 characters)";
     } else if (containsSQLExpression(text)) {
       return "This commentary contains a forbidden word";
     } else {

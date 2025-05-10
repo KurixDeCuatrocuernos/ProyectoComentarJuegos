@@ -176,19 +176,25 @@ class UserCommentsListComponent extends StatelessWidget {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Padding(
+                                  Expanded(
+                                    child: Padding(
                                       padding: EdgeInsets.symmetric(horizontal: 25),
                                       child: Text(
                                         comment['title'],
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
                                       ),
+                                    ),
                                   ),
                                 ],
                               ),
+                              SizedBox(height: 10,),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -202,6 +208,7 @@ class UserCommentsListComponent extends StatelessWidget {
                                           fontWeight: FontWeight.normal,
                                           color: Colors.white,
                                         ),
+                                        textAlign: TextAlign.justify,
                                       ),
                                     ),
                                   ),
