@@ -348,4 +348,44 @@ class UserRepository {
     }
   }
 
+  Future<List<Map<String, String>>> getUsersUidByQuery(String query) async {
+    try {
+      final QuerySnapshot response = await FirebaseFirestore.instance
+          .collection(_collection)
+          .where('name', isGreaterThanOrEqualTo: query)
+          .where('name', isLessThanOrEqualTo: query + '\uf8ff')
+          .get();
+      if (response.docs.isNotEmpty) {
+        List<Map<String, String>> users = [];
+        for(var user in response.docs) {
+          users.add({'uid': user['uid']});
+        }
+        return users;
+      } else {
+        print("NO SE ENCONTRARON USUARIOS CON ESE NOMBRE PARA BUSCAR COMENTARIOS");
+        return [];
+      }
+    } catch (error) {
+      print("HUBO UN PROBLEMA AL RECOGER LOS IDs DE USUARIO DE CLOS COMENTARIOS DE LA BASE DE DATOS");
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> getUserByUid(String id) async {
+    try {
+      final DocumentSnapshot response = await FirebaseFirestore.instance
+          .collection(_collection)
+          .doc(id)
+          .get();
+      if (response.exists) {
+        return response.data() as Map<String, dynamic>;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      print("HUBO UN ERROR AL RECOGER LOS DATOS DE USUARIO DE LA BASE DE DATOS");
+      return null;
+    }
+  }
+
 }

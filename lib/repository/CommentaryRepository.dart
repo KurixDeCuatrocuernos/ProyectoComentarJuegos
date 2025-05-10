@@ -1,6 +1,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:game_box/repository/GameRepository.dart';
 import 'package:game_box/repository/UserRepository.dart';
 import 'package:get/get.dart';
 
@@ -27,6 +28,29 @@ class CommentaryRepository {
 
     }
     return hasCommented;
+  }
+
+  Future<String?> getCommentaryIdByUserAndGame(String uid, int gameId) async {
+    try {
+      final QuerySnapshot response = await FirebaseFirestore.instance
+          .collection(_collection)
+          .where('gameId', isEqualTo: gameId)
+          .where('userId', isEqualTo: uid)
+          .get();
+      if (response.docs.isEmpty) {
+        print("NO SE ENCONTRARON COMENTARIOS PARA EDITAR CON ESE JUEGO Y USUARIO");
+        return null;
+      } else if (response.size>1) {
+        print("SE ENCONTRÓ MÁS DE UN COMENTARIO CON ESE JUEGO Y USUARIO");
+        return null;
+      } else {
+        return response.docs[0].id;
+      }
+
+    } catch (error) {
+      print("HUBO UN ERROR BUSCANDO LA ID DEL COMENTARIO");
+      return null;
+    }
   }
 
   Future<List<dynamic>?> getGamesFromCommentsByUserId(User user) async {
@@ -183,6 +207,144 @@ class CommentaryRepository {
         batch.delete(docId);
       }
   }
+  
+  Future<List<Map<String, dynamic>>?> getAllComments() async {
+    try {
+      final QuerySnapshot response = await FirebaseFirestore.instance
+          .collection(_collection)
+          .orderBy('createdAt', descending: true)
+          .get();
+      if (response.docs.isNotEmpty) {
+        return response.docs.map((doc) {
+          final comment = doc.data();
+          if (comment is Map<String, dynamic>) {
+            return comment;
+          } else {
+            print("SE OBTUVO UN COMENTARIO EN FORMATO EXTRAÑO DE LA BASE DE DATOS");
+            return <String, dynamic>{};
+          }
+        }).toList();
+      } else {
+        print("NO SE PUDIERON RECOGER COMENTARIOS DE LA BASE DE DATOS");
+        return null;
+      }
+    } catch (error) {
+      print("HUBO UN ERROR AL RECOGER LOS COMENTARIOSEN LA BASE DE DATOS");
+      return null;
+    }
+  }
 
+  Future<List<Map<String, dynamic>>?> getCommentsInUsersAndGamesByQuery(String query) async {
+    try {
+      UserRepository _userRepo = UserRepository();
+      GameRepository _gameRepo = GameRepository();
+
+      final List<Map<String, String>> users = await _userRepo.getUsersUidByQuery(query);
+      final List<Map<String, int>> games = await _gameRepo.getGamesIdByQuery(query);
+
+      final List<String> userIds = users.map((user) => user['uid']!).toList();
+      final List<int> gameIds = games.map((game) => game['id']!).toList();
+      // Mapa para evitar duplicados por document ID
+      Map<String, Map<String, dynamic>> commentMap = {};
+
+      print("SE HAN ENCONTRADO LOS JUEGOS: $gameIds Y USUARIOS: $userIds");
+
+      if (userIds.isNotEmpty) {
+        final QuerySnapshot userComments = await FirebaseFirestore.instance
+            .collection(_collection)
+            .where('userId', whereIn: userIds)
+            .get();
+
+        for (var doc in userComments.docs) {
+          commentMap[doc.id] = doc.data() as Map<String, dynamic>;
+        }
+      }
+
+      if (gameIds.isNotEmpty) {
+        final QuerySnapshot gameComments = await FirebaseFirestore.instance
+            .collection(_collection)
+            .where('gameId', whereIn: gameIds)
+            .get();
+
+        for (var doc in gameComments.docs) {
+          commentMap[doc.id] = doc.data() as Map<String, dynamic>;
+        }
+      }
+      //Ordenamos los elementos por orden cronológico descandente
+      final sortedComments = commentMap.values.toList()
+        ..sort((a, b) {
+          final tsA = a['createdAt'] as Timestamp?;
+          final tsB = b['createdAt'] as Timestamp?;
+          // Orden descendente (más reciente primero)
+          return (tsB?.compareTo(tsA ?? Timestamp(0, 0)) ?? 0);
+      });
+
+      // Devuelve los comentarios únicos y ordenados
+      return sortedComments;
+    } catch (error) {
+      print("HUBO UN ERROR AL RECOGER LOS COMENTARIOS CON LA QUERY PROPORCIONADA: $error");
+      return null;
+    }
+  }
+  
+  Future<bool> banCommentById(String id) async {
+    try {
+       await FirebaseFirestore.instance
+          .collection(_collection)
+          .doc(id)
+          .update({'status': 5});
+       return true;
+    } catch (error) {
+      print("HUBO UN ERROR AL BANNEAR EL COMENTARIO");
+      return false;
+    }
+  }
+
+  Future<bool> unbanCommentById(String id) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection(_collection)
+          .doc(id)
+          .update({'status': 0});
+      return true;
+    } catch (error) {
+      print("HUBO UN ERROR AL BANNEAR EL COMENTARIO");
+      return false;
+    }
+  }
+
+  Future<bool> deleteCommentById(String id) async {
+    try {
+      await FirebaseFirestore.instance.collection(_collection).doc(id).delete();
+      return true;
+    } catch (error) {
+      print("HUBO UN ERROR AL BORRAR EL COMENTARIO");
+      return false;
+    }
+  }
+
+  Future<bool> updateCommentById(String id, Map<String, dynamic> comment) async {
+    try {
+      await FirebaseFirestore.instance.collection(_collection).doc(id).update(comment);
+      return true;
+    } catch (error) {
+      print("THERE WAS AN ERROR UPDATING THE COMMENT IN DATABASE");
+      return false;
+    }
+  }
+
+  Future<bool> addComment(Map<String,dynamic> commentData, int gameId, String userId) async {
+    try {
+      commentData['gameId'] = gameId;
+      commentData['userId'] = userId;
+      final DocumentReference docRef = FirebaseFirestore.instance.collection(_collection).doc();
+      commentData['id'] = docRef.id;
+      await docRef.set(commentData);
+      return true;
+    } catch (error) {
+      print("HUBO UN ERROR AL SUBIR EL NUEVO COMENTARIO A LA BASE DE DATOS");
+      return false;
+    }
+  }
 
 }
