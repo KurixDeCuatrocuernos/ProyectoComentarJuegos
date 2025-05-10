@@ -137,7 +137,6 @@ void initState() {
                 backgroundColor: Colors.black,
               ),
 
-              /// 👇 Reemplazamos Expanded por Flexible + SingleChildScrollView
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(

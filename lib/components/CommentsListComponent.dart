@@ -150,6 +150,7 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                         style: const TextStyle(
                           color: Colors.white,
                         ),
+                        textAlign: TextAlign.justify,
                       ),
                       const SizedBox(height: 8),
 
