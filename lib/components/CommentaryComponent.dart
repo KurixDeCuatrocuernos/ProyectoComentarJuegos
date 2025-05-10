@@ -5,16 +5,18 @@ import 'package:game_box/comments/controllers/CommentaryController.dart';
 import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/comments/utils/CommentaryValidator.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
+import 'package:game_box/repository/GameRepository.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../games/services/IgdbApiRepository.dart';
+import '../pages/GamePage.dart';
 import '../routes/AppRoutes.dart';
 
 class CommentaryComponent extends StatefulWidget {
-  final Map<String, dynamic>? game;
+  final Map<String, dynamic> game;
   final bool edit;
 
   const CommentaryComponent({super.key, required this.game, this.edit = false});
@@ -52,6 +54,99 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
     } else {
       print("COMENTARIO RECOGIDO NO DISPONIBLE");
     }
+  }
+  
+  Future<bool> _addComment(Map<String,dynamic> comment) async {
+    String? _uid;
+    if (FirebaseAuth.instance.currentUser != null) {
+     _uid = FirebaseAuth.instance.currentUser!.uid;
+    }
+    if (_uid != null) {
+      try {
+        GameRepository _gameRepo = GameRepository();
+        CommentaryRepository _commentRepo = CommentaryRepository();
+        // print("Revisando si el juego existe");
+        bool gameExists = await _gameRepo.getIfGameExists(widget.game['id']);
+        // print("RECOGIDO EL ID: $gameExists");
+        if (gameExists) {
+          bool added = await _commentRepo.addComment(comment, widget.game['id'], _uid);
+          // print("SE HA AÑADIDO EL COMENTARIO: $added");
+          return added;
+        } else {
+          // print("AÑADIENDO EL JUEGO ANTES QUE EL COMENTARIO");
+          String gameCover = await Provider.of<IgdbApiRepository>(context, listen: false).getCover(widget.game['cover']);
+          // print("SE VA A AÑADIR EL COVER: $gameCover");
+          await _gameRepo.addNewGame(widget.game, gameCover);
+          // print("SE AÑADIÓ EL JUEGO, VA A AÑADIRSE EL COMENTARIO");
+          bool addedComment = await _commentRepo.addComment(comment, widget.game['id'], _uid);
+          // print("AÑADIDO EL COMENTARIO: $addedComment");
+          return addedComment;
+        }
+      } catch (error) {
+        print("HUBO UN ERROR AL AÑADIR EL COMENTARIO: $error");
+        return false;
+      }
+    }
+    return false;
+  }
+
+  Future<bool> _editComment(Map<String, dynamic> comment) async {
+    try {
+      CommentaryRepository _commentRepo = CommentaryRepository();
+      String _uid;
+      if (FirebaseAuth.instance.currentUser != null) {
+        _uid = FirebaseAuth.instance.currentUser!.uid;
+        String? commentId = await _commentRepo.getCommentaryIdByUserAndGame(_uid, widget.game['id']);
+        if (commentId != null) {
+          return await _commentRepo.updateCommentById(commentId, comment);
+        } else {
+          return false;
+        }
+      }
+    } catch (error) {
+      print("HUBO UN ERROR AL EDITAR EL COMENTARIO: $error");
+      return false;
+    }
+    return false;
+  }
+
+  Widget _showErrorMessage(String text) {
+    return Dialog(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.white, width: 2),
+          color: Colors.black,
+        ),
+        child: Column(
+          children: [
+            SizedBox(height: 10,),
+            Text(
+              text,
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 10,),
+            TextButton(
+              onPressed: () {
+                Get.back();
+              },
+              child: Text(
+                "OK",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -146,7 +241,7 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                             commentaryController.sliderController.value = newValue.toInt();
                           },
                         ),
-                        Text(commentaryValidator.isValidValue(commentaryController.sliderController.value) ?? ''),
+                        Text(commentaryValidator.isValidValue(commentaryController.sliderController.value.toString()) ?? ''),
                       ],
                     );
                   }),
@@ -162,20 +257,38 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                             try {
                               if (widget.edit==true){
                                 print("EDITANDO COMENTARIO");
-                                 cell = await commentaryController.editCommentary(widget.game!, uid!);
+                                Map<String, dynamic> comment = {
+                                  'title': commentaryController.titleController.text,
+                                  'body': commentaryController.commentController.text,
+                                  'value': commentaryController.sliderController.value,
+                                  'editedAt': Timestamp.now(),
+                                };
+                                bool isEdited = await _editComment(comment);
+                                if (isEdited == true) {
+                                  Get.offAllNamed(Routes.game, arguments: widget.game);
+                                } else {
+                                  Get.dialog(_showErrorMessage('There was a problem adding the new comment'));
+                                }
                               } else {
                                 print("GUARDANDO NUEVO COMENTARIO");
-                                commentaryController.addNewCommentary(
-                                    widget.game!,
-                                    uid!,
-                                    await Provider.of<IgdbApiRepository>(context, listen: false).getCover(widget.game?['cover'])
-                                );
+                                Map<String, dynamic> comment = {
+                                  'title': commentaryController.titleController.text,
+                                  'body': commentaryController.commentController.text,
+                                  'value': commentaryController.sliderController.value,
+                                  'createdAt': Timestamp.now(),
+                                };
+                                bool isCommented = await _addComment(comment);
+                                if (isCommented == true) {
+                                  Get.offAllNamed(Routes.game, arguments: widget.game);
+                                } else {
+                                  Get.dialog(_showErrorMessage('There was a problem adding the new comment'));
+                                }
                               }
                             } catch (error) {
                               cell = false;
                             }
                             if (cell == true) {
-                              Get.offAllNamed(Routes.game, arguments: widget.game);
+                              Get.off(() => GamePage(), arguments: widget.game);
                             }
                           } else {
                             print("Try again!");
