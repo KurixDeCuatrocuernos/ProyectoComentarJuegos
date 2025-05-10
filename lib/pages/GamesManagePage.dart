@@ -292,7 +292,7 @@ class _GamesManagePageState extends State<GamesManagePage> {
                         ),
                       ],
                       if (_searchStatus) ...[
-                        FutureBuilder(
+                        FutureBuilder<List<Map<String,dynamic>>?>(
                           future: _searchGames(_searchText),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {

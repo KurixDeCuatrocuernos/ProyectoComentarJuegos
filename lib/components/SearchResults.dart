@@ -11,7 +11,7 @@ class SearchResults extends StatelessWidget {
   SearchResults({super.key});
 
   void _gameRedirect(Map<String, dynamic> game) {
-    Get.toNamed(Routes.game, arguments: game);
+    Get.offAllNamed(Routes.game, arguments: game);
   }
 
   @override
@@ -30,6 +30,7 @@ class SearchResults extends StatelessWidget {
       child: Material(
         elevation: 5, // Para que se vea encima del contenido
         child: Container(
+          height: 500,
           color: Colors.grey,
           child: ListView.builder(
             shrinkWrap: true, // Evita que ocupe toda la pantalla
@@ -37,10 +38,12 @@ class SearchResults extends StatelessWidget {
             itemBuilder: (context, index) {
               return ListTile(
                 title: TextButton(
-                  child: Text(games[index]['name']),
                   style: ButtonStyle(
                   ),
-                  onPressed: () {_gameRedirect(games[index]);},
+                  onPressed: () {
+                    _gameRedirect(games[index]);
+                  },
+                  child: Text(games[index]['name']),
                 ),
                 ///subtitle: Text(games[index]['id']), id is a String type
               );

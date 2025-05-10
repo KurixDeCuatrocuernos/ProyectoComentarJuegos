@@ -98,13 +98,15 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                 borderRadius: BorderRadius.circular(15),
                 color: Color(0xFF1C1B1B),
               ),
+              padding: EdgeInsets.all(10),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Columna con imagen y puntuación
                   Column(
                     children: [
-                      SizedBox(width: 10,),
                       UserImage(size: 50),
+                      SizedBox(height: 10),
                       Container(
                         width: 50,
                         height: 50,
@@ -116,7 +118,6 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                           child: Text(
                             snapshot.data?['value'].toString() ?? 'NULL',
                             textAlign: TextAlign.center,
-
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 20,
@@ -128,58 +129,44 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                     ],
                   ),
 
-
-
                   SizedBox(width: 10),
 
-                  /// Limitamos el ancho de la columna de texto
-                  Flexible(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: 300, // el máximo ancho que quieras permitir
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 30,),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                snapshot.data?['title'] ?? 'COMMENT TITLE',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
+                  // Columna con el contenido del comentario
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 5),
+                        Text(
+                          snapshot.data?['title'] ?? 'COMMENT TITLE',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 16,
                           ),
-
-                          SizedBox(height: 5),
-                          Text(
-                            snapshot.data?['body'] ?? 'SIN CONTENIDO',
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          snapshot.data?['body'] ?? 'SIN CONTENIDO',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white,
+                          ),
+                          softWrap: true,
+                        ),
+                        SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: Text(
+                            formatDateTime(snapshot.data?['createdAt']),
                             style: TextStyle(
-                              fontWeight: FontWeight.w400,
                               color: Colors.white,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          SizedBox(height: 10,),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                formatDateTime(snapshot.data?['createdAt']),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(width: 20,),
-                            ],
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
