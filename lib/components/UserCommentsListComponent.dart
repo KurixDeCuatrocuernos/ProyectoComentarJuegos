@@ -2,11 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/components/UserImage.dart';
 import 'package:game_box/components/UserName.dart';
 import 'package:game_box/games/services/IgdbApiRepository.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:game_box/repository/GameRepository.dart';
+import 'package:game_box/viewModels/CommentViewModel.dart';
+import 'package:game_box/viewModels/PageViewModel.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:intl/intl.dart';
@@ -16,40 +19,6 @@ import '../routes/AppRoutes.dart';
 
 class UserCommentsListComponent extends StatelessWidget {
   const UserCommentsListComponent({super.key});
-
-  Future<void>? _redirectToGame(BuildContext context, int gameId) async {
-    try {
-      Map<String, dynamic>? game = {};
-      GameRepository _gameRepo = GameRepository();
-      game = await _gameRepo.getGameById(gameId);
-      if (game != null) {
-        Get.toNamed(Routes.game, arguments: game);
-      } else {
-        print("EL JUEGO RECIBIDO ESTABA VACÍO");
-      }
-    } catch (error) {
-      print("HUBO UN ERROR AL BUSCAR EL JUEGO");
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> _getComments() async {
-    List<Map<String, dynamic>> list = [];
-    User? _user = FirebaseAuth.instance.currentUser;
-    CommentaryRepository _commentRepo = CommentaryRepository();
-    if (_user != null && !_user.isAnonymous) {
-      try {
-        list = await _commentRepo.getUserCommentariesByUid(_user.uid);
-        return list;
-      } catch (error) {
-        print("HUBO UN ERROR AL RECOGER LOS COMENTARIOS DE LA BASE DE DATOS: $error");
-        return list;
-      }
-    } else {
-      print("EL USUARIO NO ESTÁ LOGGEADO");
-      return list;
-    }
-
-  }
 
   String _formatDateTime(dynamic rawDate) {
     DateTime date;
@@ -97,6 +66,9 @@ class UserCommentsListComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _pageViewModel = context.watch<PageViewModel>();
+    final _commentViewModel = context.watch<CommentViewModel>();
+
     return Container(
       child: Column(
         children: [
@@ -109,8 +81,8 @@ class UserCommentsListComponent extends StatelessWidget {
             ),
           ),
           SizedBox(height: 30,),
-          FutureBuilder <List<Map<String, dynamic>>>(
-            future: _getComments(),
+          FutureBuilder <List<CommentaryModel>>(
+            future: _commentViewModel.getCommentsByUserId(FirebaseAuth.instance.currentUser!.uid),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 /// If future is charging, shows a progress indicator
@@ -136,7 +108,7 @@ class UserCommentsListComponent extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                         child: GestureDetector(
                           onTap: () {
-                            _redirectToGame(context, comment['gameId']);
+                            _pageViewModel.redirectToGameById(comment.gameId);
                           },
                           child: Container(
                           width: 600,
@@ -157,11 +129,11 @@ class UserCommentsListComponent extends StatelessWidget {
                                     height: 64,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(50),
-                                      color: Color(_gameRatingColor(comment['value'].toDouble())),
+                                      color: Color(_gameRatingColor(comment.value.toDouble())),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        comment['value'].toString(),
+                                        comment.value.toString(),
                                         style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold,
@@ -180,7 +152,7 @@ class UserCommentsListComponent extends StatelessWidget {
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(horizontal: 25),
                                       child: Text(
-                                        comment['title'],
+                                        comment.title,
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                         textAlign: TextAlign.center,
@@ -202,7 +174,7 @@ class UserCommentsListComponent extends StatelessWidget {
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(horizontal: 25),
                                       child: Text(
-                                        comment['body'],
+                                        comment.body,
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.normal,
@@ -221,7 +193,7 @@ class UserCommentsListComponent extends StatelessWidget {
                                   Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 25),
                                     child: Text(
-                                      _formatDateTime(comment['createdAt']),
+                                      _formatDateTime(comment.createdAt),
                                       style: TextStyle(
                                         color: Colors.white70,
                                         fontSize: 13,

@@ -1,19 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/components/ShowGameComponent.dart';
 import 'package:game_box/components/ShowUserComponent.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:game_box/repository/GameRepository.dart';
 import 'package:game_box/repository/UserRepository.dart';
+import 'package:game_box/viewModels/CommentViewModel.dart';
+import 'package:game_box/viewModels/GameViewModel.dart';
+import 'package:game_box/viewModels/UserViewModel.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../auth/models/UserModel.dart';
 import '../routes/AppRoutes.dart';
 import 'EditCommentComponent.dart';
 
 class ShowCommentComponent extends StatelessWidget {
-  final Map<String, dynamic> comment;
+  final CommentaryModel comment;
   const ShowCommentComponent({super.key, required this.comment});
 
 
@@ -23,7 +28,9 @@ class ShowCommentComponent extends StatelessWidget {
 
     final _commentTextStyle = TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold);
     final _dialogStyle = BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.white, width: 2,));
-
+    final _commentViewModel = context.watch<CommentViewModel>();
+    final _userViewModel = context.watch<UserViewModel>();
+    final _gameViewModel = context.watch<GameViewModel>();
 
     String _capitalizeLetter(String text) {
       if (text.isEmpty) {
@@ -34,18 +41,10 @@ class ShowCommentComponent extends StatelessWidget {
     }
 
     String _formatDateTime() {
-      var originalDate = comment['createdAt'];
+      var originalDate = comment.createdAt!;
       DateTime date;
-      if (originalDate is Timestamp) {
-        // Si el rawDate es un Timestamp de Firestore
-        date = originalDate.toDate();
-      } else if (originalDate is DateTime) {
-        // Si ya es un DateTime
-        date = originalDate;
-      } else {
-        // Si no hay fecha, se usa la fecha y hora actual
-        date = DateTime.now();
-      }
+      // Si el rawDate es un Timestamp de Firestore
+      date = originalDate.toDate();
       // Formateamos la fecha a un formato legible
       return DateFormat('dd/MM/yyyy - HH:mm').format(date);
     }
@@ -143,39 +142,6 @@ class ShowCommentComponent extends StatelessWidget {
       );
     }
 
-    Future<UserModel?> _getUser(String id) async {
-      try {
-        UserRepository _userRepo = UserRepository();
-        UserModel? user = await _userRepo.getUserByUid(id);
-        return user;
-      } catch (error) {
-        print("HUBO UN ERROR AL RECOGER LOS DATOS DEL USUARIO");
-        return null;
-      }
-    }
-
-    Future<Map<String, dynamic>?> _getGame(int id) async {
-      try {
-        GameRepository _gameRepo = GameRepository();
-        Map<String, dynamic>? game = await _gameRepo.getGameById(id);
-        return game;
-      } catch (error) {
-        print("HUBO UN ERROR AL RECOGER LOS DATOS DEL JUEGO");
-        return null;
-      }
-    }
-
-    Future<bool> _deleteComment(String id) async {
-      try {
-        CommentaryRepository _commentRepo = CommentaryRepository();
-        bool isDeleted = await _commentRepo.deleteCommentById(id);
-        return isDeleted;
-      } catch (error) {
-        print("HUBO UN ERROR AL BORRAR EL COMENTARIO");
-        return false;
-      }
-    }
-
     Future<bool?> _confirmDelete(BuildContext context) async {
       return showDialog<bool>(
         context: context,
@@ -196,17 +162,6 @@ class ShowCommentComponent extends StatelessWidget {
       );
     }
 
-    Future<bool> _banComment(String id) async {
-      try {
-        CommentaryRepository _commentRepo = CommentaryRepository();
-        bool isDeleted = await _commentRepo.banCommentById(id);
-        return isDeleted;
-      } catch (error) {
-        print("HUBO UN ERROR AL BORRAR EL COMENTARIO");
-        return false;
-      }
-    }
-
     Future<bool?> _confirmBan(BuildContext context) async {
       return showDialog<bool>(
         context: context,
@@ -225,17 +180,6 @@ class ShowCommentComponent extends StatelessWidget {
           ],
         ),
       );
-    }
-
-    Future<bool> _unbanComment(String id) async {
-      try {
-        CommentaryRepository _commentRepo = CommentaryRepository();
-        bool isDeleted = await _commentRepo.unbanCommentById(id);
-        return isDeleted;
-      } catch (error) {
-        print("HUBO UN ERROR AL BORRAR EL COMENTARIO");
-        return false;
-      }
     }
 
     Future<bool?> _confirmUnban(BuildContext context) async {
@@ -312,7 +256,7 @@ class ShowCommentComponent extends StatelessWidget {
       child: Container(
         width: 400,
         decoration: BoxDecoration(
-          color: (comment['status'] != null && comment['status'] == 5) ? Color(0xFF4E0101) : Colors.black,
+          color: (comment.status != null && comment.status == 5) ? Color(0xFF4E0101) : Colors.black,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Column(
@@ -330,13 +274,13 @@ class ShowCommentComponent extends StatelessWidget {
                       Flexible(
                         child: TextButton(
                           child: Text(
-                            _capitalizeLetter(comment['title']),
+                            _capitalizeLetter(comment.title),
                             style: _commentTextStyle,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
                           onPressed: () {
-                            Get.dialog(_showDialogText(comment['title']));
+                            Get.dialog(_showDialogText(comment.title));
                           },
                         ),
                       ),
@@ -350,13 +294,13 @@ class ShowCommentComponent extends StatelessWidget {
                       Flexible(
                         child: TextButton(
                           child: Text(
-                            _capitalizeLetter(comment['body']),
+                            _capitalizeLetter(comment.body),
                             style: _commentTextStyle,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
                           onPressed: () {
-                            Get.dialog(_showDialogText(comment['body']));
+                            Get.dialog(_showDialogText(comment.body));
                           },
                         ),
                       ),
@@ -370,13 +314,13 @@ class ShowCommentComponent extends StatelessWidget {
                       Flexible(
                         child: TextButton(
                           child: Text(
-                            comment['userId'].toString(),
+                            comment.userId.toString(),
                             style: _commentTextStyle,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
                           onPressed: () async {
-                            UserModel? user = await _getUser(comment['userId']);
+                            UserModel? user = await _userViewModel.getUserByIdFromRepository(comment.userId);
                             if (user == null) {
                               Get.dialog(_showDialogText("USER DATA ERROR"));
                             } else {
@@ -395,13 +339,13 @@ class ShowCommentComponent extends StatelessWidget {
                       Flexible(
                         child: TextButton(
                           child: Text(
-                            comment['gameId'].toString(),
+                            comment.gameId.toString(),
                             style: _commentTextStyle,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
                           onPressed: () async {
-                            Map<String, dynamic>? game = await _getGame(comment['gameId']);
+                            Map<String, dynamic>? game = await _gameViewModel.getGameByIdFromRepository(comment.gameId);
                             if (game == null) {
                               Get.dialog(_showDialogText("GAME DATA ERROR"));
                             } else {
@@ -448,7 +392,7 @@ class ShowCommentComponent extends StatelessWidget {
                       bool? del = await _confirmDelete(context);
                       if (del != null) {
                         if(del == true) {
-                          bool isDeleted = await _deleteComment(comment['id']);
+                          bool isDeleted = await _commentViewModel.deleteCommentById(comment.id);
                           if (isDeleted == true) {
                             Get.offAllNamed(Routes.manageComments);
                           } else {
@@ -458,14 +402,14 @@ class ShowCommentComponent extends StatelessWidget {
                       }
                     },
                   ),
-                  if (comment['status'] == null || comment['status'] == 0)
+                  if (comment.status == null || comment.status == 0)
                     IconButton(
                       icon: Icon(Icons.cancel_outlined, size: 32,),
                       onPressed: () async {
                         bool? ban = await _confirmBan(context);
                         if (ban != null) {
                           if(ban == true) {
-                            bool isBanned = await _banComment(comment['id']);
+                            bool isBanned = await _commentViewModel.banCommentById(comment.id);
                             if (isBanned == true) {
                               Get.offAllNamed(Routes.manageComments);
                             } else {
@@ -475,14 +419,14 @@ class ShowCommentComponent extends StatelessWidget {
                         }
                       },
                     ),
-                  if (comment['status'] != null && comment['status'] == 5)
+                  if (comment.status != null && comment.status == 5)
                     IconButton(
                       icon: Icon(Icons.check_circle_outline_outlined, size: 32,),
                       onPressed: () async {
                         bool? ban = await _confirmUnban(context);
                         if (ban != null) {
                           if(ban == true) {
-                            bool isBanned = await _unbanComment(comment['id']);
+                            bool isBanned = await _commentViewModel.unbanCommentById(comment.id);
                             if (isBanned == true) {
                               Get.offAllNamed(Routes.manageComments);
                             } else {

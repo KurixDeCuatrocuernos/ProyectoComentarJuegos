@@ -1,9 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/pages/CommentsPage.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
+import 'package:game_box/viewModels/CommentViewModel.dart';
+import 'package:game_box/viewModels/PageViewModel.dart';
+import 'package:game_box/viewModels/UserViewModel.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 
 import '../auth/structure/controllers/AuthController.dart';
 import '../components/SearchPlaceholder.dart';
@@ -14,6 +19,7 @@ import '../components/UserImage.dart';
 import '../components/UserName.dart';
 import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
+import '../viewModels/AuthViewModel.dart';
 
 class CommentsManagePage extends StatefulWidget {
   const CommentsManagePage({super.key});
@@ -32,31 +38,7 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
   @override
   void initState() {
     super.initState();
-    _checkRole();
-  }
-
-  void _toggleSearch() {
-    setState(() {
-      _searchStatus = true;
-    });
-  }
-
-  void _closeSearch() {
-    setState(() {
-      _searchStatus = false;
-    });
-  }
-
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarOpen = !_isSidebarOpen;
-    });
-  }
-
-  void _closeSidebar() {
-    setState(() {
-      _isSidebarOpen = false;
-    });
+    context.read<PageViewModel>().checkAdminRoleFromRepository();
   }
 
   void _signOut() {
@@ -75,8 +57,8 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
             ),
             TextButton(
               child: Text('Yes'),
-              onPressed: () {
-                _authController.signOut();
+              onPressed: () async {
+                await context.read<AuthViewModel>().signOut();
                 Get.offAllNamed(Routes.login);// Llamar a la función para cerrar sesión
               },
             ),
@@ -86,96 +68,14 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
     );
   }
 
-  void _checkRole() async {
-    UserRepository _userRepo = UserRepository();
-    User? _user = FirebaseAuth.instance.currentUser;
-    if (_user != null && !_user.isAnonymous){
-      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
-      if (check != null) {
-        if(check != "ADMIN") {
-          /// If user is not an Admin, we redirect to HomePage
-          print("User is not an Admin");
-          Get.offAllNamed(Routes.home);
-        }
-      } else {
-        print("The database returned null");
-        Get.offAllNamed(Routes.home);
-      }
-    } else {
-      print("User is Unknown");
-      Get.offAllNamed(Routes.home);
-    }
-  }
-
-  Future<bool> _tryRole() async {
-    UserRepository _userRepo = UserRepository();
-    User? _user = FirebaseAuth.instance.currentUser;
-    if (_user != null && !_user.isAnonymous){
-      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
-      if (check != null) {
-        if(check=="ADMIN") {
-          print("USER IS ADMIN");
-          return true;
-        } else {
-          print("User is not an Admin");
-          return false;
-        }
-      } else {
-        print("The database returned null");
-        return false;
-      }
-    } else {
-      print("User is Unknown");
-      return false;
-    }
-  }
-
-  Future<List<Map<String, dynamic>>?> _manageComments() async {
-    try {
-      CommentaryRepository _commentRepo = CommentaryRepository();
-      List<Map<String, dynamic>>? response = await _commentRepo.getAllComments();
-      return response;
-    } catch (error) {
-      print("HUBO UN ERROR AL BUSCAR LOS COMENTARIOS");
-      return null;
-    }
-  }
-
-  /// Devuelve true si contiene caracteres no alfanumericos y false si no los contiene
-  bool _containsCharNoAlfanumeric(String texto) {
-    final alfanumerico = RegExp(r'^[a-zA-Z0-9 _\-\:\.\,áéíóúüÁÉÍÓÚÜñÑ]+$');
-    return !alfanumerico.hasMatch(texto);
-  }
-
-  Future<List<Map<String, dynamic>>?> _searchComments(String query) async {
-    if (_containsCharNoAlfanumeric(query)) {
-      return [];
-    } else {
-      try {
-        CommentaryRepository _commentRepo = CommentaryRepository();
-        final List<Map<String, dynamic>>? commentsList = await _commentRepo.getCommentsInUsersAndGamesByQuery(query.toLowerCase());
-        if (commentsList != null) {
-          if (commentsList.isNotEmpty) {
-            return commentsList;
-          } else {
-            return [];
-          }
-        } else {
-          print("Query for games answered null");
-          return null;
-        }
-      } catch (error) {
-        print("THERE WAS AN ERROR GETTING THE DATA REQUESTED FROM THE DATABASE: $error");
-        return null;
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final _commentViewModel = context.watch<CommentViewModel>();
+    final _userViewModel = context.watch<UserViewModel>();
+    final _pageViewModel = context.watch<PageViewModel>();
     return Scaffold(
       backgroundColor: Colors.grey,
-      bottomNavigationBar: ToolBar(onMenuPressed: _toggleSidebar),
+      bottomNavigationBar: ToolBar(onMenuPressed: _pageViewModel.toggleSidebar),
       body: Stack(
         children: [
           Column(
@@ -237,9 +137,9 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                                 setState(() {
                                   _searchText = text;
                                   if (text.isEmpty) {
-                                    _closeSearch();
+                                    _pageViewModel.closeSearch;
                                   } else {
-                                    _toggleSearch();
+                                    _pageViewModel.toggleSearch;
                                   }
                                 });
                               },
@@ -250,8 +150,8 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                       ),
                       SizedBox(height: 40,),
                       if (!_searchStatus) ...[
-                        FutureBuilder<List<Map<String, dynamic>>?>(
-                          future: _manageComments(),
+                        FutureBuilder<List<CommentaryModel>?>(
+                          future: _commentViewModel.getAllCommentsFromRepository(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
                               return CircularProgressIndicator();
@@ -280,8 +180,8 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                         ),
                       ],
                       if (_searchStatus) ...[
-                        FutureBuilder<List<Map<String, dynamic>>?>(
-                          future: _searchComments(_searchText),
+                        FutureBuilder<List<CommentaryModel>?>(
+                          future: _commentViewModel.searchCommentsFromRepository(_searchText),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
                               return CircularProgressIndicator();
@@ -294,8 +194,7 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                                 return Column(
                                   children: snapshot.data!.map((comment) => Column(
                                     children: [
-                                      if (comment.isNotEmpty)
-                                        ShowCommentComponent(comment: comment),
+                                      ShowCommentComponent(comment: comment),
                                       SizedBox(height: 20,),
                                     ],
                                   ),
@@ -319,7 +218,7 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
           /// BARRA LATERAL + OVERLAY
           if (_isSidebarOpen)
             GestureDetector(
-              onTap: _closeSidebar,
+              onTap: _pageViewModel.closeSidebar,
               child: Container(
                 color: Colors.black54, // oscurece el fondo
                 width: double.infinity,
@@ -343,7 +242,7 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                     onTap: () => Get.offAllNamed(Routes.comments),
                   ),
                   FutureBuilder<bool>(
-                    future: _tryRole(),
+                    future: _userViewModel.tryUserRoleFromRepository(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return CircularProgressIndicator();

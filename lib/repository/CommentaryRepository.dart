@@ -2,9 +2,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:game_box/auth/models/UserProjection.dart';
+import 'package:game_box/comments/models/CommentProjection.dart';
+import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/repository/GameRepository.dart';
 import 'package:game_box/repository/UserRepository.dart';
 import 'package:get/get.dart';
+
+import '../comments/models/CommentEditProjection.dart';
 
 class CommentaryRepository {
 
@@ -54,11 +58,11 @@ class CommentaryRepository {
     }
   }
 
-  Future<List<dynamic>?> getGamesFromCommentsByUserId(User user) async {
+  Future<List<dynamic>?> getGamesFromCommentsByUserId(String uid) async {
     try {
       final QuerySnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
-          .where('userId', isEqualTo: user.uid)
+          .where('userId', isEqualTo: uid)
           .orderBy('createdAt', descending: true)
           .limit(10)
           .get();
@@ -92,15 +96,15 @@ class CommentaryRepository {
     return hasCommented;
   }
 
-  Future<Map<String,dynamic>?> getCommentaryByUserAndGame(User user, Map<String,dynamic> game) async {
+  Future<CommentaryModel?> getCommentaryByUserAndGame(String uid, Map<String,dynamic> game) async {
     try {
       final QuerySnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
-          .where('userId', isEqualTo: user.uid)
+          .where('userId', isEqualTo: uid)
           .where('gameId', isEqualTo: game['id'])
           .get();
       if(response.docs.isNotEmpty){
-        var doc = response.docs.first.data() as Map <String,dynamic>;
+        var doc = CommentaryModel.fromMap(response.docs.first.data() as Map <String,dynamic>);
         return doc;
       } else {
         print("SE OBTUVO UN COMENTARIO VACÍO");
@@ -112,7 +116,7 @@ class CommentaryRepository {
     }
   }
 
-  Future<List<Map<String, dynamic>>?> getCommentsByGame(Map<String, dynamic> game) async{
+  Future<List<CommentProjection>?> getCommentsByGame(Map<String, dynamic> game) async{
     try {
       final QuerySnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
@@ -121,18 +125,19 @@ class CommentaryRepository {
           .limit(10)
           .get();
       if(response.docs.isNotEmpty){
-        List<Map<String, dynamic>> docs = response.docs.map((doc)=>doc.data() as Map<String,dynamic>).toList();
+        List<CommentaryModel> docs = response.docs.map((doc) => CommentaryModel.fromMap(doc.data() as Map<String,dynamic>)).toList();
+        List<CommentProjection> commentsWithName= [];
         UserRepository _userRepo = UserRepository();
         for (var element in docs) {
-          String? username = await _userRepo.getUserNameByUid(element['userId']);
-          if (username != null) {
-            element['name'] = username;
-          } else {
-            element['name'] = 'Username';
-          }
+          String? username = await _userRepo.getUserNameByUid(element.userId);
+          final CommentProjection commentProj = CommentProjection(
+            comment: element,
+            username: username ?? "Username",
+          );
+          commentsWithName.add(commentProj);
         }
         // print("Resultados obtenidos: $docs");
-        return docs;
+        return commentsWithName;
       } else {
         print("SE OBTUVO UNA LISTA DE COMENTARIOS VACÍA");
         return null;
@@ -159,13 +164,13 @@ class CommentaryRepository {
   Future<List<Map<String, dynamic>>?> getWeightAndValuesByGame(Map<String, dynamic> game) async {
     try {
       UserRepository _userRepo = UserRepository();
-      List<Map<String, dynamic>>? comments = await getCommentsByGame(game);
+      List<CommentProjection>? comments = await getCommentsByGame(game);
       if (comments!.isNotEmpty) {
         List<Map<String, dynamic>> retorno = [];
         for (var comment in comments) {
           retorno.add({
-            'value': comment['value'].toDouble(),
-            'weight': await _userRepo.getWeightById(comment['userId']),
+            'value': comment.comment.value.toDouble(),
+            'weight': await _userRepo.getWeightById(comment.username),
           });
         }
         return retorno;
@@ -179,8 +184,8 @@ class CommentaryRepository {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getUserCommentariesByUid(String uid) async {
-    List<Map<String, dynamic>> list = [];
+  Future<List<CommentaryModel>> getUserCommentariesByUid(String uid) async {
+    List<CommentaryModel> list = [];
     try {
       final QuerySnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
@@ -188,7 +193,7 @@ class CommentaryRepository {
           .orderBy('createdAt', descending: true)
           .get();
       if (response.docs.isNotEmpty) {
-        list = response.docs.map((doc)=>doc.data() as Map<String,dynamic>).toList();
+        list = response.docs.map((doc) => CommentaryModel.fromMap(doc.data() as Map<String,dynamic>)).toList();
       }
       return list;
     } catch (error) {
@@ -209,7 +214,7 @@ class CommentaryRepository {
       }
   }
   
-  Future<List<Map<String, dynamic>>?> getAllComments() async {
+  Future<List<CommentaryModel>?> getAllComments() async {
     try {
       final QuerySnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
@@ -219,12 +224,12 @@ class CommentaryRepository {
         return response.docs.map((doc) {
           final comment = doc.data();
           if (comment is Map<String, dynamic>) {
-            return comment;
+            return CommentaryModel.fromMap(comment);
           } else {
             print("SE OBTUVO UN COMENTARIO EN FORMATO EXTRAÑO DE LA BASE DE DATOS");
-            return <String, dynamic>{};
+            return null;
           }
-        }).toList();
+        }).whereType<CommentaryModel>().toList();
       } else {
         print("NO SE PUDIERON RECOGER COMENTARIOS DE LA BASE DE DATOS");
         return null;
@@ -235,7 +240,7 @@ class CommentaryRepository {
     }
   }
 
-  Future<List<Map<String, dynamic>>?> getCommentsInUsersAndGamesByQuery(String query) async {
+  Future<List<CommentaryModel>?> getCommentsInUsersAndGamesByQuery(String query) async {
     try {
       UserRepository _userRepo = UserRepository();
       GameRepository _gameRepo = GameRepository();
@@ -272,14 +277,14 @@ class CommentaryRepository {
         }
       }
       //Ordenamos los elementos por orden cronológico descandente
-      final sortedComments = commentMap.values.toList()
+      final sortedMaps = commentMap.values.toList()
         ..sort((a, b) {
           final tsA = a['createdAt'] as Timestamp?;
           final tsB = b['createdAt'] as Timestamp?;
           // Orden descendente (más reciente primero)
           return (tsB?.compareTo(tsA ?? Timestamp(0, 0)) ?? 0);
       });
-
+      final sortedComments = sortedMaps.map((map) => CommentaryModel.fromMap(map)).toList();
       // Devuelve los comentarios únicos y ordenados
       return sortedComments;
     } catch (error) {
@@ -324,9 +329,9 @@ class CommentaryRepository {
     }
   }
 
-  Future<bool> updateCommentById(String id, Map<String, dynamic> comment) async {
+  Future<bool> updateCommentById(String id, CommentEditProjection comment) async {
     try {
-      await FirebaseFirestore.instance.collection(_collection).doc(id).update(comment);
+      await FirebaseFirestore.instance.collection(_collection).doc(id).update(comment.toMap());
       return true;
     } catch (error) {
       print("THERE WAS AN ERROR UPDATING THE COMMENT IN DATABASE");
@@ -334,16 +339,31 @@ class CommentaryRepository {
     }
   }
 
-  Future<bool> addComment(Map<String,dynamic> commentData, int gameId, String userId) async {
+  Future<bool> addComment(CommentaryModel commentData) async {
     try {
-      commentData['gameId'] = gameId;
-      commentData['userId'] = userId;
       final DocumentReference docRef = FirebaseFirestore.instance.collection(_collection).doc();
-      commentData['id'] = docRef.id;
-      await docRef.set(commentData);
+      final CommentaryModel comment = CommentaryModel(
+          id: docRef.id,
+          title: commentData.title,
+          body: commentData.body,
+          value: commentData.value,
+          userId: commentData.userId,
+          gameId: commentData.gameId
+      );
+      await docRef.set(commentData.toMap());
       return true;
     } catch (error) {
       print("HUBO UN ERROR AL SUBIR EL NUEVO COMENTARIO A LA BASE DE DATOS");
+      return false;
+    }
+  }
+
+  Future<bool> updateFullCommentById(String id, CommentaryModel comment) async {
+    try {
+      await FirebaseFirestore.instance.collection(_collection).doc(id).update(comment.toMap());
+      return true;
+    } catch (error) {
+      print("THERE WAS AN ERROR UPDATING THE COMMENT IN DATABASE");
       return false;
     }
   }

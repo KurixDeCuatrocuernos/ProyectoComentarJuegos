@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/comments/controllers/CommentaryController.dart';
+import 'package:game_box/comments/models/CommentEditProjection.dart';
 import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/comments/utils/CommentaryValidator.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:game_box/repository/GameRepository.dart';
+import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
@@ -49,71 +51,16 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
   }
 
   Future<void> _isEditing() async {
-    print("EDITANDO COMENTARIO");
-    User? user = FirebaseAuth.instance.currentUser;
-    Map<String, dynamic>? commentary = await CommentaryRepository().getCommentaryByUserAndGame(user!, widget.game);
+    String user = FirebaseAuth.instance.currentUser!.uid;
+    final commentary = await context.read<CommentViewModel>().getCommentaryByUserAndGame(user, widget.game);
 
     if (commentary != null) {
-      _commentController.titleController.text = commentary['title'];
-      _commentController.commentController.text = commentary['body'];
-      _commentController.sliderController.value = commentary['value'];
+      _commentController.titleController.text = commentary.title;
+      _commentController.commentController.text = commentary.body;
+      _commentController.sliderController.value = commentary.value.round();
     } else {
       print("COMENTARIO RECOGIDO NO DISPONIBLE");
     }
-  }
-  
-  Future<bool> _addComment(Map<String,dynamic> comment) async {
-    String? _uid;
-    if (FirebaseAuth.instance.currentUser != null) {
-     _uid = FirebaseAuth.instance.currentUser!.uid;
-    }
-    if (_uid != null) {
-      try {
-        GameRepository _gameRepo = GameRepository();
-        CommentaryRepository _commentRepo = CommentaryRepository();
-        // print("Revisando si el juego existe");
-        bool gameExists = await _gameRepo.getIfGameExists(widget.game['id']);
-        // print("RECOGIDO EL ID: $gameExists");
-        if (gameExists) {
-          bool added = await _commentRepo.addComment(comment, widget.game['id'], _uid);
-          // print("SE HA AÑADIDO EL COMENTARIO: $added");
-          return added;
-        } else {
-          // print("AÑADIENDO EL JUEGO ANTES QUE EL COMENTARIO");
-          String gameCover = await Provider.of<IgdbApiRepository>(context, listen: false).getCover(widget.game['cover']);
-          // print("SE VA A AÑADIR EL COVER: $gameCover");
-          await _gameRepo.addNewGame(widget.game, gameCover);
-          // print("SE AÑADIÓ EL JUEGO, VA A AÑADIRSE EL COMENTARIO");
-          bool addedComment = await _commentRepo.addComment(comment, widget.game['id'], _uid);
-          // print("AÑADIDO EL COMENTARIO: $addedComment");
-          return addedComment;
-        }
-      } catch (error) {
-        print("HUBO UN ERROR AL AÑADIR EL COMENTARIO: $error");
-        return false;
-      }
-    }
-    return false;
-  }
-
-  Future<bool> _editComment(Map<String, dynamic> comment) async {
-    try {
-      CommentaryRepository _commentRepo = CommentaryRepository();
-      String _uid;
-      if (FirebaseAuth.instance.currentUser != null) {
-        _uid = FirebaseAuth.instance.currentUser!.uid;
-        String? commentId = await _commentRepo.getCommentaryIdByUserAndGame(_uid, widget.game['id']);
-        if (commentId != null) {
-          return await _commentRepo.updateCommentById(commentId, comment);
-        } else {
-          return false;
-        }
-      }
-    } catch (error) {
-      print("HUBO UN ERROR AL EDITAR EL COMENTARIO: $error");
-      return false;
-    }
-    return false;
   }
 
   Widget _showErrorMessage(String text) {
@@ -157,7 +104,8 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
 
   @override
   Widget build(BuildContext context) {
-    String? uid = FirebaseAuth.instance.currentUser?.uid;
+    final String? _uid = FirebaseAuth.instance.currentUser?.uid;
+    final _commentViewModel = context.watch<CommentViewModel>();
 
     return Container(
       width: 300,
@@ -263,13 +211,12 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                             try {
                               if (widget.edit==true){
                                 print("EDITANDO COMENTARIO");
-                                Map<String, dynamic> comment = {
+                                CommentEditProjection comment = CommentEditProjection.fromMap({
                                   'title': _commentController.titleController.text,
                                   'body': _commentController.commentController.text,
                                   'value': _commentController.sliderController.value,
-                                  'editedAt': Timestamp.now(),
-                                };
-                                bool isEdited = await _editComment(comment);
+                                });
+                                bool isEdited = await _commentViewModel.editCommentFromRepository(comment, widget.game['id'], _uid!);
                                 if (isEdited == true) {
                                   Get.offAllNamed(Routes.game, arguments: widget.game);
                                 } else {
@@ -277,13 +224,15 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                                 }
                               } else {
                                 print("GUARDANDO NUEVO COMENTARIO");
-                                Map<String, dynamic> comment = {
-                                  'title': _commentController.titleController.text,
-                                  'body': _commentController.commentController.text,
-                                  'value': _commentController.sliderController.value,
-                                  'createdAt': Timestamp.now(),
-                                };
-                                bool isCommented = await _addComment(comment);
+                                CommentaryModel comment = CommentaryModel(
+                                  id: "null",
+                                  title: _commentController.titleController.text,
+                                  body: _commentController.commentController.text,
+                                  value: _commentController.sliderController.value,
+                                  userId: _uid!,
+                                  gameId: widget.game['id'],
+                                );
+                                bool isCommented = await _commentViewModel.addCommentToRepository(comment, widget.game, _uid);
                                 if (isCommented == true) {
                                   Get.offAllNamed(Routes.game, arguments: widget.game);
                                 } else {

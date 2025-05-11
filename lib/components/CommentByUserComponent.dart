@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/components/UserImage.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
+import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class CommentByUserComponent extends StatefulWidget {
   final Map<String, dynamic> game;
@@ -14,27 +17,6 @@ class CommentByUserComponent extends StatefulWidget {
 }
 
 class _CommentByUserComponentState extends State<CommentByUserComponent> {
-
-  CommentaryRepository _commentRepo = CommentaryRepository();
-
-  Future<Map<String, dynamic>?> _isComment(Map<String,dynamic> game) async {
-    if (FirebaseAuth.instance.currentUser != null) {
-      if (FirebaseAuth.instance.currentUser!.uid.isNotEmpty) {
-        try {
-          return await _commentRepo.getCommentaryByUserAndGame(FirebaseAuth.instance.currentUser!, widget.game);
-        } catch (error) {
-          print("There was an error connecting with database");
-          return null;
-        }
-      } else {
-        print("User has not uid");
-        return null;
-      }
-    } else {
-      print("User is not logged");
-      return null;
-    }
-  }
 
   String formatDateTime(dynamic rawDate) {
     DateTime date;
@@ -83,8 +65,10 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: _isComment(widget.game),
+    final _commentViewModel = context.watch<CommentViewModel>();
+    final _uid= FirebaseAuth.instance.currentUser!.uid;
+    return FutureBuilder<CommentaryModel?>(
+      future: _commentViewModel.isCommentedThisGameByThisUser(widget.game, _uid),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
@@ -112,11 +96,11 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                         height: 50,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(50),
-                          color: Color(_gameRatingColor(snapshot.data?['value'].toDouble())),
+                          color: Color(_gameRatingColor(snapshot.data!.value.toDouble())),
                         ),
                         child: Center(
                           child: Text(
-                            snapshot.data?['value'].toString() ?? 'NULL',
+                            snapshot.data?.value.toString() ?? 'NULL',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.black,
@@ -138,7 +122,7 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                       children: [
                         SizedBox(height: 5),
                         Text(
-                          snapshot.data?['title'] ?? 'COMMENT TITLE',
+                          snapshot.data?.title ?? 'COMMENT TITLE',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -148,7 +132,7 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          snapshot.data?['body'] ?? 'SIN CONTENIDO',
+                          snapshot.data?.body ?? 'SIN CONTENIDO',
                           style: TextStyle(
                             fontWeight: FontWeight.w400,
                             color: Colors.white,
@@ -159,7 +143,7 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                         Align(
                           alignment: Alignment.bottomRight,
                           child: Text(
-                            formatDateTime(snapshot.data?['createdAt']),
+                            formatDateTime(snapshot.data?.createdAt),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
