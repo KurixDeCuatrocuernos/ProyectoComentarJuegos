@@ -6,6 +6,10 @@ import 'package:game_box/firebase_options.dart';
 import 'package:game_box/games/services/IgdbApiRepository.dart';
 import 'package:game_box/routes/AppPages.dart';
 import 'package:game_box/routes/AppRoutes.dart';
+import 'package:game_box/viewModels/AuthViewModel.dart';
+import 'package:game_box/viewModels/CommentViewModel.dart';
+import 'package:game_box/viewModels/GameViewModel.dart';
+import 'package:game_box/viewModels/PageViewModel.dart';
 import 'package:game_box/viewModels/UserViewModel.dart';
 import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
@@ -32,7 +36,17 @@ void main() async {
         providers: [
           ChangeNotifierProvider(create: (_) => SearchResultsUtil()),
           ChangeNotifierProvider(create: (_) => UserViewModel()),
+          ChangeNotifierProvider(create: (_) => AuthViewModel()),
+          ChangeNotifierProvider(create: (_) => PageViewModel()),
+          ///API PROVIDER WITH SHINGLETON
           Provider<IgdbApiRepository>.value(value: igdbRepo),
+
+          ChangeNotifierProvider(create: (context) => CommentViewModel(
+            Provider.of<IgdbApiRepository> (context, listen: false),
+          )),
+          ChangeNotifierProvider(create: (context) => GameViewModel(
+            Provider.of<IgdbApiRepository> (context, listen: false),
+          )),
         ],
     child: MyApp(),
     ),
