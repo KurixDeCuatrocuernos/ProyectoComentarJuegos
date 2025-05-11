@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:game_box/comments/controllers/CommentaryController.dart';
+import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/comments/utils/CommentaryValidator.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
+import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 
 import '../routes/AppRoutes.dart';
 
 class EditCommentComponent extends StatefulWidget {
-  final Map<String, dynamic> comment;
+  final CommentaryModel comment;
   const EditCommentComponent({super.key, required this.comment});
 
   @override
@@ -34,30 +37,30 @@ class _EditCommentComponentState extends State<EditCommentComponent> {
     super.dispose();
   }
 
-
   void _setData() {
-    _commentController.idController.text = widget.comment['id'];
-    _commentController.titleController.text = widget.comment['title'];
-    _commentController.commentController.text = widget.comment['body'];
-    _commentController.sliderController.value = widget.comment['value'];
-    _commentController.gameIdController.text = widget.comment['gameId'].toString();
-    _commentController.userIdController.text = widget.comment['userId'];
+    _commentController.idController.text = widget.comment.id;
+    _commentController.titleController.text = widget.comment.title;
+    _commentController.commentController.text = widget.comment.body;
+    _commentController.sliderController.value = widget.comment.value.toInt();
+    _commentController.gameIdController.text = widget.comment.gameId.toString();
+    _commentController.userIdController.text = widget.comment.userId;
   }
 
   Future<bool> _submitData() async {
+    final _commentViewModel = context.read<CommentViewModel>();
     try {
-      CommentaryRepository _commentRepo = CommentaryRepository();
-      Map<String, dynamic> newComment = {
+      CommentaryModel newComment = CommentaryModel.fromMap({
+        'id': widget.comment.id,
         'title': _commentController.titleController.text,
         'body': _commentController.commentController.text,
         'value': _commentController.sliderController.value.toInt(),
         'gameId': int.parse(_commentController.gameIdController.text),
         'userId': _commentController.userIdController.text,
-      };
-      bool isUpdated = await _commentRepo.updateCommentById(widget.comment['id'], newComment);
+      });
+      bool isUpdated = await _commentViewModel.updateFullCommentFromRepository(newComment, newComment.id);
       return isUpdated;
     } catch (error) {
-      print("THERE WAS ERRORS UPDATING THE COMMENT");
+      print("THERE WAS ERRORS UPDATING THE COMMENT $error");
       return false;
     }
   }
@@ -71,7 +74,7 @@ class _EditCommentComponentState extends State<EditCommentComponent> {
           color: Color(0xFF120B0B),
         ),
         width: 400,
-        height: 150,
+        height: 200,
         child: Column(
           children: [
             SizedBox(height: 10,),

@@ -1,56 +1,46 @@
 
 // Por ahora no se ha usado este modelo
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+/// Esta clase es el Modelo para instanciar objetos Game, de cara a sustituir los Map<String,dynamic> para implementar el patron MVVM.
 class GameModel {
-  final int _id;
-  final String _name;
-  final String _summary;
-  final double _rating;
-  final int _coverId;
-  final String _coverURL;
-  final Timestamp _date;
+  final int id;
+  final String name;
+  final String summary;
+  final double rating;
+  final int coverId;
+  final String? url;
+  final Timestamp date;
 
-  /// Constructor for GameModel
+  /// Metodo constructor de GameModel
   GameModel({
-    required int id,
-    required String name,
-    required String summary,
-    required double rating,
-    required int coverId,
-    required String coverURL,
-    required Timestamp date,
-  }) : _id = id, _name = name, _summary = summary, _rating = rating, _coverId = coverId, _coverURL = coverURL, _date = date;
-
-  /// Getters
-  int get id => _id;
-  String get name => _name;
-  String get summary => _summary;
-  double get rating => _rating;
-  int get cover => _coverId;
-  String get coverURL => _coverURL;
-  Timestamp get date => _date;
-  /// Setters
-  set _id (int id){
-    _id = id;
+    required this.id,
+    required this.name,
+    required this.summary,
+    required this.rating,
+    required this.coverId,
+    required this.date,
+    this.url,
+  });
+  /// Este Metodo devuelve un GameModel a partir de un Map<String, dynamic>
+  factory GameModel.fromMap(Map<String, dynamic> map) {
+    return GameModel(
+      id: map['id'],
+      name: map['name'],
+      summary: map['summary'],
+      rating: map['rating'],
+      coverId: map['coverId'],
+      date: map['date'],
+      url: map['url'],
+    );
   }
-  set _name(String name) {
-    _name = name;
-  }
-  set _summary(String summary) {
-    _summary = summary;
-  }
-  set _rating (double rating){
-    _rating = rating;
-  }
-  set _coverId (int coverId) {
-    _coverId = coverId;
-  }
-  set _coverURL (String coverURL) {
-    _coverURL = coverURL;
-  }
-  set _date (Timestamp date) {
-    _date = date;
-  }
+  /// Este Metodo devuelve un Map<String,dynamic> a partir del GameModel
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'name': name,
+    'rating': rating,
+    'summary': summary,
+    'cover': coverId,
+    if (url != null) 'url': url,
+  };
 
 }

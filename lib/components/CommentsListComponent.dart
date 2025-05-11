@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:game_box/comments/models/CommentProjection.dart';
 import 'package:game_box/components/UserImage.dart';
 import 'package:game_box/components/UserName.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
+import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class CommentsListComponent extends StatefulWidget {
   final Map<String, dynamic> game;
@@ -14,15 +17,6 @@ class CommentsListComponent extends StatefulWidget {
 }
 
 class _CommentsListComponentState extends State<CommentsListComponent> {
-
-  Future<List<Map<String, dynamic>>?> _getComments(Map<String, dynamic> game) async {
-    try {
-      CommentaryRepository _commentRepo = CommentaryRepository();
-      return await _commentRepo.getCommentsByGame(game);
-    } catch (error) {
-      return null;
-    }
-  }
 
   String _formatDateTime(dynamic rawDate) {
     DateTime date;
@@ -71,8 +65,10 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Map<String, dynamic>>?>(
-        future: _getComments(widget.game),
+    final viewModel = context.watch<CommentViewModel>();
+
+    return FutureBuilder<List<CommentProjection>?>(
+        future: viewModel.getCommentsFromRepository(widget.game),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             /// If connection state is wating, we show a circular progress indicator
@@ -101,7 +97,7 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              comment['name'],
+                              comment.username,
                               style: TextStyle(
                                 fontSize: 20,
                                 color: Colors.white,
@@ -113,11 +109,11 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                             height: 50,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(50),
-                              color: Color(_gameRatingColor(comment['value'].toDouble())),
+                              color: Color(_gameRatingColor(comment.comment.value.toDouble())),
                             ),
                             child: Center(
                               child: Text(
-                                comment['value'].toString() ?? 'NULL',
+                                comment.comment.value.toString() ?? 'NULL',
                                 style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 20,
@@ -133,7 +129,7 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                       /// Título
                       Center(
                         child: Text(
-                          comment['title'] ?? 'TITLE NOT FOUND',
+                          comment.comment.title ?? 'TITLE NOT FOUND',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -146,7 +142,7 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
 
                       /// Cuerpo del comentario
                       Text(
-                        comment['body'] ?? 'BODY NOT FOUND',
+                        comment.comment.body ?? 'BODY NOT FOUND',
                         style: const TextStyle(
                           color: Colors.white,
                         ),
@@ -158,7 +154,7 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: Text(
-                          _formatDateTime(comment['createdAt']),
+                          _formatDateTime(comment.comment.createdAt),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,

@@ -84,7 +84,7 @@ class CommentaryValidator {
   String? isValidUserId(String? text) {
     if (text == null || text.isEmpty) {
       return "A Comment must have an ID";
-    } else if (text.length > 20) {
+    } else if (text.length > 50) {
       return "The ID must have 20 characters at most";
     } else if (containsSQLExpression(text)) {
       return "The Id contains forbidden words";

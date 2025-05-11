@@ -70,9 +70,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<bool> _haveCommented() async{
     User? _user = FirebaseAuth.instance.currentUser;
+    CommentaryRepository _commentRepo = CommentaryRepository();
     bool commented = false;
     if (_user != null) {
-      commented = await CommentaryRepository().getIfUserHasCommented(_user);
+      commented = await _commentRepo.getIfUserHasCommented(_user);
     }
     print("EL USUARIO HA COMENTADO: $commented");
     return commented;
