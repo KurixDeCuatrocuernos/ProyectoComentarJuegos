@@ -19,6 +19,7 @@ import '../components/UserImage.dart';
 import '../components/UserName.dart';
 import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
+import '../viewModels/AdminViewModel.dart';
 import '../viewModels/AuthViewModel.dart';
 
 class CommentsManagePage extends StatefulWidget {
@@ -30,15 +31,16 @@ class CommentsManagePage extends StatefulWidget {
 
 class _CommentsManagePageState extends State<CommentsManagePage> {
 
-  AuthController _authController = AuthController();
-  bool _isSidebarOpen = false;
   bool _searchStatus = false;
   String _searchText = '';
 
   @override
   void initState() {
     super.initState();
-    context.read<PageViewModel>().checkAdminRoleFromRepository();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      context.read<AdminViewModel>().loadComments();
+      context.read<AuthViewModel>().checkRole();
+    });
   }
 
   void _signOut() {
@@ -70,12 +72,13 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
 
   @override
   Widget build(BuildContext context) {
-    final _commentViewModel = context.watch<CommentViewModel>();
-    final _userViewModel = context.watch<UserViewModel>();
-    final _pageViewModel = context.watch<PageViewModel>();
+    final _pageVM = context.read<PageViewModel>();
+    bool _isSidebarOpen = context.watch<PageViewModel>().isSidebarOpen;
+    final String? userId = context.read<UserViewModel>().getCurrentUserId();
+
     return Scaffold(
       backgroundColor: Colors.grey,
-      bottomNavigationBar: ToolBar(onMenuPressed: _pageViewModel.toggleSidebar),
+      bottomNavigationBar: ToolBar(onMenuPressed: _pageVM.toggleSidebar),
       body: Stack(
         children: [
           Column(
@@ -88,7 +91,7 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                   color: Colors.white,
                   icon: Icon(Icons.arrow_back),
                 ),
-                title: UserImage(size: 45,),
+                title: UserImage(size: 45, uid: userId ?? ""),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
@@ -111,8 +114,8 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                       Text(
                         'COMMENTS MANAGE PAGE',
                         style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 20,
+                          color: Color(0xFF750202),
+                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.08 : MediaQuery.of(context).size.height *0.03,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -121,7 +124,8 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                         children: [
                           SizedBox(width: 20,),
                           SizedBox(
-                            width: 300, height: 50,
+                            width: MediaQuery.of(context).size.width * 0.8,
+                            height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.2 : MediaQuery.of(context).size.height * 0.08,
                             child: SearchBar(
                               backgroundColor: WidgetStatePropertyAll(Color(0xFFDDDBDB)),
                               hintText: "Search User's or Game's commentary...",
@@ -129,19 +133,16 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                                 TextStyle(
                                   fontWeight: FontWeight.w500,
                                   color: Colors.black,
-                                  fontSize: 12,
+                                  fontSize: MediaQuery.of(context).size.width * 0.035,
                                 ),
                               ),
-                              leading: Icon(Icons.search),
+                              leading: Icon(Icons.search, size: MediaQuery.of(context).size.width * 0.035,),
                               onChanged: (text) {
                                 setState(() {
                                   _searchText = text;
-                                  if (text.isEmpty) {
-                                    _pageViewModel.closeSearch;
-                                  } else {
-                                    _pageViewModel.toggleSearch;
-                                  }
+                                  _searchStatus = text.isNotEmpty;
                                 });
+                                context.read<AdminViewModel>().searchComments(text);
                               },
                             ),
                           ),
@@ -150,59 +151,45 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                       ),
                       SizedBox(height: 40,),
                       if (!_searchStatus) ...[
-                        FutureBuilder<List<CommentaryModel>?>(
-                          future: _commentViewModel.getAllCommentsFromRepository(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                        Consumer<AdminViewModel>(
+                          builder: (context, commentVM, child) {
+                            if (commentVM.isLoading) {
                               return CircularProgressIndicator();
-                            } else if (snapshot.hasError) {
-                              return Text('THERE WAS AN ERROR GETTING THE GAMES');
-                            } else if (snapshot.hasData) {
-                              if(snapshot.data == null) {
-                                return Text('DATA IS NULL');
-                              } else if (snapshot.data!.isEmpty) {
-                                return Text('BUT NOBODY COMES...');
-                              } else {
-                                return Column(
-                                  children: snapshot.data!.map((comment) => Column(
-                                    children: [
-                                      ShowCommentComponent(comment: comment),
-                                      SizedBox(height: 20,),
-                                    ],
-                                  ),
-                                  ).toList(),
-                                );
-                              }
+                            } else if (commentVM.hasError) {
+                              return Text('THERE WAS AN ERROR GETTING THE COMMENTS');
+                            } else if (commentVM.comments.isEmpty) {
+                              return Text('BUT NOBODY COMES...');
                             } else {
-                              return Text('THERE WAS A UNEXPECTED ERROR');
+                              return Column(
+                                children: commentVM.comments.map((comment) => Column(
+                                  children: [
+                                    ShowCommentComponent(comment: comment),
+                                    SizedBox(height: 20),
+                                  ],
+                                )).toList(),
+                              );
                             }
                           },
                         ),
                       ],
                       if (_searchStatus) ...[
-                        FutureBuilder<List<CommentaryModel>?>(
-                          future: _commentViewModel.searchCommentsFromRepository(_searchText),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                        Consumer<AdminViewModel>(
+                          builder: (context, commentVM, child) {
+                            if (commentVM.isLoading) {
                               return CircularProgressIndicator();
-                            } else if (snapshot.hasError) {
-                              return Text('Search result has errors');
-                            } else if (snapshot.hasData) {
-                              if (snapshot.data!.isEmpty) {
-                                return Text('BUT NOBODY COMES...');
-                              } else {
-                                return Column(
-                                  children: snapshot.data!.map((comment) => Column(
-                                    children: [
-                                      ShowCommentComponent(comment: comment),
-                                      SizedBox(height: 20,),
-                                    ],
-                                  ),
-                                  ).toList(),
-                                );
-                              }
+                            } else if (commentVM.hasError) {
+                              return Text('THERE WAS AN ERROR GETTING THE COMMENTS');
+                            } else if (commentVM.filteredComments.isEmpty) {
+                              return Text('BUT NOBODY COMES...');
                             } else {
-                              return Text('Search has unexpected error');
+                              return Column(
+                                children: commentVM.filteredComments.map((comment) => Column(
+                                  children: [
+                                    ShowCommentComponent(comment: comment),
+                                    SizedBox(height: 20),
+                                  ],
+                                )).toList(),
+                              );
                             }
                           },
                         ),
@@ -218,7 +205,7 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
           /// BARRA LATERAL + OVERLAY
           if (_isSidebarOpen)
             GestureDetector(
-              onTap: _pageViewModel.closeSidebar,
+              onTap: _pageVM.closeSidebar,
               child: Container(
                 color: Colors.black54, // oscurece el fondo
                 width: double.infinity,
@@ -228,11 +215,11 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
 
           AnimatedPositioned(
             duration: Duration(milliseconds: 300),
-            left: _isSidebarOpen ? 0 : -250,
+            left: _isSidebarOpen ? 0 : -MediaQuery.of(context).size.width * 0.6,
             top: 0,
             bottom: 0,
             child: Container(
-              width: 250,
+              width: MediaQuery.of(context).size.width * 0.6,
               color: Colors.grey[900],
               child: Column(
                 children: [
@@ -242,7 +229,7 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                     onTap: () => Get.offAllNamed(Routes.comments),
                   ),
                   FutureBuilder<bool>(
-                    future: _userViewModel.tryUserRoleFromRepository(),
+                    future: context.read<AuthViewModel>().tryRole(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return CircularProgressIndicator();

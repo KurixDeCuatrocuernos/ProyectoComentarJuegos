@@ -2,19 +2,21 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:game_box/auth/structure/controllers/AuthController.dart';
 import 'package:game_box/components/GameListComponent.dart';
 import 'package:game_box/components/SearchPlaceholder.dart';
 import 'package:game_box/components/UserImage.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
-import 'package:game_box/repository/UserRepository.dart';
+import 'package:game_box/viewModels/AuthViewModel.dart';
+import 'package:game_box/viewModels/PageViewModel.dart';
+import 'package:game_box/viewModels/UserViewModel.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 
 import '../components/CommentedGamesListComponent.dart';
 import '../components/SearchResults.dart';
 import '../components/ToolBar.dart';
 import '../components/UserName.dart';
 import '../routes/AppRoutes.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,22 +26,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
-  AuthController _authController = AuthController();
-
-  bool _isSidebarOpen = false;
-
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarOpen = !_isSidebarOpen;
-    });
-  }
-
-  void _closeSidebar() {
-    setState(() {
-      _isSidebarOpen = false;
-    });
-  }
 
   void _signOut() {
     showDialog(
@@ -57,8 +43,8 @@ class _HomePageState extends State<HomePage> {
             ),
             TextButton(
               child: Text('Yes'),
-              onPressed: () {
-                _authController.signOut();
+              onPressed: () async {
+                await context.read<AuthViewModel>().signOut();
                 Get.offAllNamed(Routes.login);// Llamar a la función para cerrar sesión
               },
             ),
@@ -68,47 +54,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<bool> _haveCommented() async{
-    User? _user = FirebaseAuth.instance.currentUser;
-    CommentaryRepository _commentRepo = CommentaryRepository();
-    bool commented = false;
-    if (_user != null) {
-      commented = await _commentRepo.getIfUserHasCommented(_user);
-    }
-    print("EL USUARIO HA COMENTADO: $commented");
-    return commented;
-  }
-
-  Future<bool> _tryRole() async {
-    UserRepository _userRepo = UserRepository();
-    User? _user = FirebaseAuth.instance.currentUser;
-    if (_user != null && !_user.isAnonymous){
-      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
-      if (check != null) {
-        if(check=="ADMIN") {
-          print("USER IS ADMIN");
-          return true;
-        } else {
-          print("User is not an Admin");
-          return false;
-        }
-      } else {
-        print("The database returned null");
-        return false;
-      }
-    } else {
-      print("User is Unknown");
-      return false;
-    }
-
-  }
-
   @override
   Widget build(BuildContext context) {
     User? _user = FirebaseAuth.instance.currentUser;
+    final _pageVM = context.read<PageViewModel>();
+    bool _isSidebarOpen = context.watch<PageViewModel>().isSidebarOpen;
+    final String? userId = context.read<UserViewModel>().getCurrentUserId();
+
     return Scaffold(
       backgroundColor: Colors.grey,
-      bottomNavigationBar: ToolBar(onMenuPressed: _toggleSidebar),
+      bottomNavigationBar: ToolBar(onMenuPressed: _pageVM.toggleSidebar),
       body: Stack(
         children: [
           Column(
@@ -121,7 +76,7 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                     icon: Icon(Icons.arrow_back),
                 ),
-                title: UserImage(size: 45,),
+                title: UserImage(size: 45, uid: userId ?? "",),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
@@ -139,9 +94,9 @@ class _HomePageState extends State<HomePage> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-
+                      /// Se Reconstruye necesariamente a partir del usuario (current user)
                       FutureBuilder<bool>(
-                        future: _haveCommented(),
+                        future: _pageVM.haveCommented(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return SizedBox(height: 20);
@@ -159,17 +114,15 @@ class _HomePageState extends State<HomePage> {
                         },
                       ),
 
-                    GameListComponent(genre: "Role-playing (RPG)"),
-                      // SizedBox(height: 20,),
-                      // GameListComponent(genre: "Visual Novel"),
-                      // SizedBox(height: 20,),
-                      // GameListComponent(genre: "Indie"),
-                      // SizedBox(height: 20,),
-                      // GameListComponent(genre: "Adventure"),
-                      // SizedBox(height: 20,),
-                      // GameListComponent(genre: "Platform"),
-
+                      /// No necesita reconstruirse si no hay cambios
+                      GameListComponent(genre: "Role-playing (RPG)"),
                       SizedBox(height: 20,),
+                      GameListComponent(genre: "Turn-based strategy (TBS)"),
+                      SizedBox(height: 20,),
+                      GameListComponent(genre: "Adventure"),
+                      SizedBox(height: 20,),
+
+
                     ]
                   ),
                 ),
@@ -180,7 +133,7 @@ class _HomePageState extends State<HomePage> {
           /// BARRA LATERAL + OVERLAY
           if (_isSidebarOpen)
             GestureDetector(
-              onTap: _closeSidebar,
+              onTap: _pageVM.closeSidebar,
               child: Container(
                 color: Colors.black54, // oscurece el fondo
                 width: double.infinity,
@@ -190,11 +143,11 @@ class _HomePageState extends State<HomePage> {
 
           AnimatedPositioned(
             duration: Duration(milliseconds: 300),
-            left: _isSidebarOpen ? 0 : -250,
+            left: _isSidebarOpen ? 0 : -MediaQuery.of(context).size.width *0.6,
             top: 0,
             bottom: 0,
             child: Container(
-              width: 250,
+              width: MediaQuery.of(context).size.width * 0.6,
               color: Colors.grey[900],
               child: Column(
                 children: [
@@ -204,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                     onTap: () => Get.offAllNamed(Routes.comments),
                   ),
                   FutureBuilder<bool>(
-                    future: _tryRole(),
+                    future: context.read<AuthViewModel>().tryRole(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return CircularProgressIndicator();

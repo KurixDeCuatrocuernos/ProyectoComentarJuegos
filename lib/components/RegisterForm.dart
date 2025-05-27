@@ -18,6 +18,8 @@ class RegisterForm extends StatelessWidget{
   Widget build(BuildContext context) {
     FormValidator formValidator = FormValidator();
     AuthController authController = Get.find();
+    double _formTextSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06 : MediaQuery.of(context).size.height * 0.025;
+    final _formStyle = TextStyle(fontSize: _formTextSize);
     return Form(
       key: _formKey,
       child: Card(
@@ -26,8 +28,8 @@ class RegisterForm extends StatelessWidget{
         ),
         color: Colors.white,
         child: Container(
-          width: double.infinity,
-          height: double.infinity,
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.6 : MediaQuery.of(context).size.height * 0.7,
           margin: EdgeInsets.symmetric(
             vertical: 20,
             horizontal: 20,
@@ -44,7 +46,7 @@ class RegisterForm extends StatelessWidget{
               "SIGN UP",
               style: TextStyle(
                 color: Color(0xFF000000),
-                fontSize:20,
+                fontSize:MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.height * 0.03,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -57,6 +59,7 @@ class RegisterForm extends StatelessWidget{
                 validator: formValidator.isValidName,
                 controller: authController.nameController,
                 decoration: const InputDecoration(hintText: "Insert your UserName"),
+                style: _formStyle,
               ),
             ),
             SizedBox(
@@ -67,6 +70,7 @@ class RegisterForm extends StatelessWidget{
                 validator: formValidator.isValidEmail,
                 controller: authController.emailController,
                 decoration: const InputDecoration(hintText: "Insert your Email"),
+                style: _formStyle,
               ),
             ),
             SizedBox(
@@ -88,6 +92,7 @@ class RegisterForm extends StatelessWidget{
                     },
                   ),
                 ),
+                style: _formStyle,
               ),
               ),
             ),
@@ -111,6 +116,7 @@ class RegisterForm extends StatelessWidget{
                   },
                   ),
                 ),
+                style: _formStyle,
               ),
               ),
             ),
@@ -137,6 +143,7 @@ class RegisterForm extends StatelessWidget{
                 style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
+                  fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06 : MediaQuery.of(context).size.height * 0.03,
                 ),
               ),
             ),
@@ -153,10 +160,11 @@ class RegisterForm extends StatelessWidget{
                 Get.offAllNamed(Routes.login);
               },
               child: Text(
-                "You have account? Log in here!",
+                "Do You have an account? Log in here!",
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.purple,
-                  fontSize: 15,
+                  fontSize: _formTextSize,
                   fontWeight: FontWeight.bold,
                 ),
               ),

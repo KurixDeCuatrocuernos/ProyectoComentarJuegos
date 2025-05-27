@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/components/UserImage.dart';
 import 'package:game_box/repository/UserRepository.dart';
+import 'package:game_box/viewModels/AdminViewModel.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../auth/models/UserModel.dart';
 import '../routes/AppRoutes.dart';
@@ -29,21 +31,10 @@ class ShowUserComponent extends StatelessWidget {
     return DateFormat('dd/MM/yyyy - HH:mm').format(date);
   }
 
-  Future<bool> _deleteUser() async {
-    try {
-      UserRepository _userRepo = UserRepository();
-      final bool response = await _userRepo.deleteUserByUid(user.uid);
-      return response;
-    } catch (error) {
-      print("Error deleting the user");
-      return false;
-    }
-  }
-
   void _showDeleteUser(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text('Deleting User'),
           content: Text('Are you sure you want to delete this user?'),
@@ -57,35 +48,38 @@ class ShowUserComponent extends StatelessWidget {
             TextButton(
               child: Text('Yes'),
               onPressed: () async {
-                final bool isDeleted = await _deleteUser();
-                if (isDeleted == true) {
-                  /// Closes the dialog and recharges the page after one second
-                  Navigator.of(context).pop();  // It closes the dialog
-                  Future.delayed(Duration.zero, () {
-                    Get.offAllNamed(Routes.manageUsers);
-                  });
+                Navigator.of(dialogContext).pop(); // Cerramos antes de async
+
+                /// Esperamos un frame para asegurar que el diálogo cerró
+                await Future.delayed(Duration(milliseconds: 100));
+
+                final bool cell = await Get.context!
+                    .read<AdminViewModel>()
+                    .deleteUser(user.uid);
+
+                if (cell) {
+                  Get.offAllNamed(Routes.manageUsers);
                 } else {
-                  /// Closes the dialog and opens a new one after one second
-                  Navigator.of(context).pop();
-                  Future.delayed(Duration.zero, () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Icon(Icons.warning),
-                          content: Text('DELETION FAILED', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),),
-                          actions: <Widget>[
-                            TextButton(
-                              child: Text('Ok'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  });
+                  showDialog(
+                    context: Get.context!,
+                    builder: (BuildContext errorDialogContext) {
+                      return AlertDialog(
+                        title: Icon(Icons.warning),
+                        content: Text(
+                          'BAN FAILED',
+                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text('Ok'),
+                            onPressed: () {
+                              Navigator.of(errorDialogContext).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
                 }
               },
             ),
@@ -95,21 +89,10 @@ class ShowUserComponent extends StatelessWidget {
     );
   }
 
-  Future<bool> _banUser() async {
-    try {
-      UserRepository _userRepo = UserRepository();
-      final bool response = await _userRepo.banUserByUid(user.uid);
-      return response;
-    } catch (error) {
-      print('Hubo un error al bannear al usuario $error');
-      return false;
-    }
-  }
-
   void _showBanUser(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext builder) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text('Ban User'),
           content: Text("Are you sure you want to ban this user? (Its commentaries will be banned too)"),
@@ -117,39 +100,44 @@ class ShowUserComponent extends StatelessWidget {
             TextButton(
               child: Text('No'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop(); // Usamos el context del diálogo
               },
             ),
             TextButton(
               child: Text('Yes'),
               onPressed: () async {
-                bool cell = await _banUser();
-                if (cell == true) {
-                  Navigator.of(context).pop();
-                  Future.delayed(Duration.zero, () {
-                    Get.offAllNamed(Routes.manageUsers);
-                  });
+                Navigator.of(dialogContext).pop(); // Cerramos antes de async
+
+                /// Esperamos un frame para asegurar que el diálogo cerró
+                await Future.delayed(Duration(milliseconds: 100));
+
+                final bool cell = await Get.context!
+                    .read<AdminViewModel>()
+                    .banUser(user.uid);
+
+                if (cell) {
+                  Get.offAllNamed(Routes.manageUsers);
                 } else {
-                  Navigator.of(context).pop();
-                  Future.delayed(Duration.zero, () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext builder) {
-                        return AlertDialog(
-                          title: Icon(Icons.warning),
-                          content: Text('DELETION FAILED', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),),
-                          actions: <Widget>[
-                            TextButton(
-                              child: Text('Ok'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  });
+                  showDialog(
+                    context: Get.context!,
+                    builder: (BuildContext errorDialogContext) {
+                      return AlertDialog(
+                        title: Icon(Icons.warning),
+                        content: Text(
+                          'BAN FAILED',
+                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text('Ok'),
+                            onPressed: () {
+                              Navigator.of(errorDialogContext).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
                 }
               },
             ),
@@ -159,21 +147,10 @@ class ShowUserComponent extends StatelessWidget {
     );
   }
 
-  Future<bool> _unbanUser() async {
-    try {
-      UserRepository _userRepo = UserRepository();
-      final bool response = await _userRepo.unbanUserByUid(user.uid);
-      return response;
-    } catch (error) {
-      print('Hubo un error al bannear al usuario $error');
-      return false;
-    }
-  }
-
   void _showUnbanUser(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext builder) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text('Unban User'),
           content: Text("Are you sure you want to unban this user? (Its commentaries will be show again)"),
@@ -187,33 +164,38 @@ class ShowUserComponent extends StatelessWidget {
             TextButton(
               child: Text('Yes'),
               onPressed: () async {
-                bool cell = await _unbanUser();
-                if (cell == true) {
-                  Navigator.of(context).pop();
-                  Future.delayed(Duration.zero, () {
-                    Get.offAllNamed(Routes.manageUsers);
-                  });
+                Navigator.of(dialogContext).pop(); // Cerramos antes de async
+
+                /// Esperamos un frame para asegurar que el diálogo cerró
+                await Future.delayed(Duration(milliseconds: 100));
+
+                final bool cell = await Get.context!
+                    .read<AdminViewModel>()
+                    .unbanUser(user.uid);
+
+                if (cell) {
+                  Get.offAllNamed(Routes.manageUsers);
                 } else {
-                  Navigator.of(context).pop();
-                  Future.delayed(Duration.zero, () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext builder) {
-                        return AlertDialog(
-                          title: Icon(Icons.warning),
-                          content: Text('DELETION FAILED', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),),
-                          actions: <Widget>[
-                            TextButton(
-                              child: Text('Ok'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  });
+                  showDialog(
+                    context: Get.context!,
+                    builder: (BuildContext errorDialogContext) {
+                      return AlertDialog(
+                        title: Icon(Icons.warning),
+                        content: Text(
+                          'UNBAN FAILED',
+                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text('Ok'),
+                            onPressed: () {
+                              Navigator.of(errorDialogContext).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
                 }
               },
             ),
@@ -225,8 +207,9 @@ class ShowUserComponent extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    double _textSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06 : MediaQuery.of(context).size.height * 0.015;
     return Container(
-      width: 400,
+      width: MediaQuery.of(context).size.width * 0.8,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         color: user.status==5 ? Color(0xFF4E0101) : Colors.black,
@@ -234,8 +217,9 @@ class ShowUserComponent extends StatelessWidget {
       child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              UserImage(size: 40),
+              UserImage(size: MediaQuery.of(context).size.width * 0.1, uid: user.uid),
               Column(
                 children: [
                   SizedBox(height: 10,),
@@ -243,9 +227,10 @@ class ShowUserComponent extends StatelessWidget {
                     'Username: ${user.name ?? 'NULL'}',
                     style: TextStyle(
                       color: user.status ==5 ? Colors.black : Colors.white,
-                      fontSize: 18,
+                      fontSize: _textSize,
                       fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 10,),
@@ -253,9 +238,10 @@ class ShowUserComponent extends StatelessWidget {
                     'Email: ${user.email ?? 'NULL'}',
                     style: TextStyle(
                       color: user.status ==5 ? Colors.black : Colors.white,
-                      fontSize: 18,
+                      fontSize: _textSize,
                       fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 10,),
@@ -263,9 +249,10 @@ class ShowUserComponent extends StatelessWidget {
                     'Start Date: ${_formatDateTime(user.createdAt)}',
                     style: TextStyle(
                       color: user.status ==5 ? Colors.black : Colors.white,
-                      fontSize: 18,
+                      fontSize: _textSize,
                       fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 10,),
@@ -273,9 +260,10 @@ class ShowUserComponent extends StatelessWidget {
                     'Role: ${user.role ?? 'NULL'}',
                     style: TextStyle(
                       color: user.status == 5 ? Colors.black : Colors.white,
-                      fontSize: 18,
+                      fontSize: _textSize,
                       fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 10,),

@@ -12,7 +12,4 @@ class CommentaryController extends GetxController {
   var sliderController = 50.obs;
   String _collectionC = 'comments';
   String _collectionG = 'games';
-
-  ///Este metodo pertenece a GameRepository, pero lo pongo aquí por ahora
-
 }

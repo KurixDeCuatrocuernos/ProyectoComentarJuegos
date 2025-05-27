@@ -17,6 +17,8 @@ class LoginForm extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
+    double _formTextSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06 : MediaQuery.of(context).size.height * 0.025;
+    final _formStyle = TextStyle(fontSize: _formTextSize);
     FormValidator formValidator = FormValidator();
     AuthController authController = Get.find();
     return Form(
@@ -27,8 +29,8 @@ class LoginForm extends StatelessWidget{
         ),
         color: Colors.white,
         child: Container(
-          width: double.infinity,
-          height: double.infinity,
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.5 : MediaQuery.of(context).size.height * 0.5,
           margin: EdgeInsets.symmetric(
             vertical: 20,
             horizontal: 20,
@@ -45,7 +47,7 @@ class LoginForm extends StatelessWidget{
               "LOGIN",
               style: TextStyle(
                 color: Color(0xFF000000),
-                fontSize:20,
+                fontSize:MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.height * 0.03,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -57,6 +59,7 @@ class LoginForm extends StatelessWidget{
                   validator: formValidator.isValidEmail,
                   controller: authController.emailController,
                   decoration: const InputDecoration(hintText: "Insert your Email"),
+                  style: _formStyle,
                 ),
             ),
             SizedBox(
@@ -78,6 +81,7 @@ class LoginForm extends StatelessWidget{
                     },
                   ),
                 ),
+                style: _formStyle,
               )),
             ),
             SizedBox(
@@ -103,6 +107,7 @@ class LoginForm extends StatelessWidget{
                 style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
+                  fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06 : MediaQuery.of(context).size.height * 0.03,
                 ),
               ),
             ),
@@ -113,7 +118,7 @@ class LoginForm extends StatelessWidget{
               "OR",
               style: TextStyle(
                 color: Color(0xFF000000),
-                fontSize:20,
+                fontSize: _formTextSize,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -138,24 +143,17 @@ class LoginForm extends StatelessWidget{
                   height: 60,
                 ),
             ),
-
-            /// moves to the end of the Column
-            Expanded(
-              child: SizedBox(
-                height: 10,
-              ),
-            ),
-
             /// Redirects to Register
             TextButton(
               onPressed: () {
                 Get.offAllNamed(Routes.register);
               },
               child: Text(
-                "Don't have account?, Register here!",
+                "Don't have an account?, Register here!",
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.purple,
-                  fontSize: 15,
+                  fontSize: _formTextSize,
                   fontWeight: FontWeight.bold,
                 ),
               ),

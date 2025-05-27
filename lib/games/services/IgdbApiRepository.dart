@@ -1,5 +1,9 @@
 import 'dart:convert';
+import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:game_box/games/models/GameApiProjection.dart';
+import 'package:game_box/games/models/GameModel.dart';
 import 'package:http/http.dart' as http;
 
 class IgdbApiRepository {
@@ -53,7 +57,8 @@ class IgdbApiRepository {
     }
   }
 
-  Future<dynamic> getGames(String query) async {
+  /// Este Metodo retorna una lista de GameModel recogisdos de IGDBAPI con base en la query proporcionada
+  Future<List<GameModel>> getGames(String query) async {
     if (_clientId == null || _accessToken == null || _clientSecret == null){
       throw Exception('Any authentication credential is null: Client=$_clientId, secret=$_clientSecret, token=$_accessToken');
     }
@@ -69,7 +74,26 @@ class IgdbApiRepository {
       body: 'fields name, genres.name, rating, summary, cover, first_release_date; search "$query"; where game_type = 0;',    );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final List decoded = jsonDecode(response.body);
+      return decoded.map<GameModel?>((json) {
+        try{
+          return GameModel.fromMap(json);
+        } catch (error) {
+          try {
+            print("ERROR AL CONVERTIR AUTOMÄTICAMENTE JSON A GAMEMODEL EN EL REPOSITORIO DE LA API: $error");
+            return GameModel(
+              id: int.parse(json['id']),
+              name: json['name'],
+              coverId: int.parse(json['cover']),
+              first_release_date: Timestamp.fromMillisecondsSinceEpoch(json['first_release_date']),
+              summary: json['summary'],
+              rating: double.parse(json['rating']),
+            );
+          } catch (error2) {
+            return null; /// if misses here, the search didn't return results
+          }
+        }
+      }).whereType<GameModel>().toList();
     } else if (response.statusCode == 429) {
       ///If we recieve 429 status code means too much queries at the same time
       await initToken(); /// regenerate the access token
@@ -79,7 +103,8 @@ class IgdbApiRepository {
     }
   }
 
-  Future<dynamic> getGameById(String id) async {
+  Future<GameModel> getGameById(String id) async {
+    print("Buscando el juego en la API");
     if (_clientId == null || _accessToken == null || _clientSecret == null){
       throw Exception('Any authentication credential is null: Client=$_clientId, secret=$_clientSecret, token=$_accessToken');
     }
@@ -92,10 +117,23 @@ class IgdbApiRepository {
         "Client-ID": _clientId,
         'Authorization': 'Bearer $_accessToken',
       },
-      body: 'fields id, name, genres.name, rating, summary, cover; where id = $id;',    );
+      body: 'fields id, name, genres.name, rating, summary, cover; where id = $id;',);
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = await jsonDecode(response.body);
+      if (data is List && data.isNotEmpty) {
+        final gameData = data.first;
+        return GameModel(
+          id: gameData['id'],
+          name: gameData['name'],
+          summary: gameData['summary'],
+          rating: gameData['rating'],
+          coverId: gameData['cover'],
+          first_release_date: gameData['first_release_date'] !=null ? Timestamp.fromMillisecondsSinceEpoch(gameData['first_release_date']) : null,
+        );
+      } else {
+        throw Exception("Game Not Found or Empty Data");
+      }
     } else if (response.statusCode == 429) {
       ///If we recieve 429 status code means too much queries at the same time
       await initToken(); /// regenerate the access token
@@ -123,7 +161,7 @@ class IgdbApiRepository {
 
     if (response.statusCode == 200) {
       final data = await jsonDecode(response.body);
-      print('COVER OBTENIDA: $data');
+      print('COVER OBTENIDA DE LA API: $data');
       if (data.isNotEmpty && data[0]['image_id'] != null) {
         final imageId = data[0]['image_id'];
         return 'https://images.igdb.com/igdb/image/upload/t_cover_big/$imageId.jpg';
@@ -150,7 +188,8 @@ class IgdbApiRepository {
           "Client-ID": _clientId,
           "Authorization": 'Bearer $_accessToken',
         },
-        body: 'fields id, name; where name = "$genre";',
+        /// Consulta RegEx para IGDB API
+        body: 'fields id, name; where name ~ *"$genre"*;',
       );
       if (response.statusCode == 200) {
 
@@ -167,7 +206,8 @@ class IgdbApiRepository {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getAllGamesByGenre(int genre) async {
+  Future<List<GameApiProjection>> getAllGamesByGenre(int genre) async {
+    //print("Se van a buscar los juegos por género en la API");
     if (_clientId == null || _accessToken == null || _clientSecret == null) {
       throw Exception('Any authentication credential is null');
     } else {
@@ -178,18 +218,25 @@ class IgdbApiRepository {
           "Client-ID": _clientId,
           "Authorization": 'Bearer $_accessToken',
         },
+        /// Hay más datos de los utilizados de cara a la escalabilidad (agregar el nombre)
         body: '''
-        fields id, name, cover, rating, first_release_date;
+        fields id, name, cover, first_release_date;
         where genres = $genre & first_release_date != null & game_type = 0;
         sort first_release_date desc;
-        limit 10;
+        limit 11;
       ''',
       );
-
       if (response.statusCode == 200) {
         final data = await jsonDecode(response.body);
+        //print("La API DEVOLVIÓ: $data");
         if (data.isNotEmpty) {
-          return List<Map<String, dynamic>>.from(data);
+          List<GameApiProjection> list = [];
+          for (var element in data) {
+            element['url'] = await getCover(element['cover']);
+            list.add(GameApiProjection.fromMap(element as Map<String, dynamic>));
+          }
+          //print("los datos de la API se han convertido en: $list");
+          return list;
         } else {
           throw Exception('Not found games');
         }

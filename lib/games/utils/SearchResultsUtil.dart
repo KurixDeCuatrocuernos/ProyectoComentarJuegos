@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+
+import '../models/GameModel.dart';
 ///This util bonds the SearchPlaceHolder and SearchResults classes in order to show the results on each page
 class SearchResultsUtil extends ChangeNotifier {
-  List<dynamic> _games = [];
+  List<GameModel> _games = [];
   String _query = '';  // Añadir el campo de texto de búsqueda
 
-  List<dynamic> get games => _games;
+  List<GameModel> get games => _games;
   String get query => _query;
 
-  void updateResults(List<dynamic> results, String query) {
+  void updateResults(List<GameModel> results, String query) {
     _games = results;
     _query = query;
     notifyListeners();

@@ -1,18 +1,19 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:game_box/repository/GameRepository.dart';
+import 'package:game_box/viewModels/AdminViewModel.dart';
+import 'package:game_box/viewModels/AuthViewModel.dart';
+import 'package:game_box/viewModels/PageViewModel.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 
-import '../auth/structure/controllers/AuthController.dart';
 import '../components/SearchPlaceholder.dart';
 import '../components/SearchResults.dart';
 import '../components/ShowGameComponent.dart';
 import '../components/ToolBar.dart';
 import '../components/UserImage.dart';
 import '../components/UserName.dart';
-import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
+import '../viewModels/UserViewModel.dart';
 
 class GamesManagePage extends StatefulWidget {
   const GamesManagePage({super.key});
@@ -23,39 +24,15 @@ class GamesManagePage extends StatefulWidget {
 
 class _GamesManagePageState extends State<GamesManagePage> {
 
-  AuthController _authController = AuthController();
-  bool _isSidebarOpen = false;
   bool _searchStatus = false;
   String _searchText = '';
-
 
   @override
   void initState() {
     super.initState();
-    _checkRole();
-  }
-
-  void _toggleSearch() {
-    setState(() {
-      _searchStatus = true;
-    });
-  }
-
-  void _closeSearch() {
-    setState(() {
-      _searchStatus = false;
-    });
-  }
-
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarOpen = !_isSidebarOpen;
-    });
-  }
-
-  void _closeSidebar() {
-    setState(() {
-      _isSidebarOpen = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      context.read<AdminViewModel>().loadGames();
+      context.read<AuthViewModel>().checkRole();
     });
   }
 
@@ -75,9 +52,9 @@ class _GamesManagePageState extends State<GamesManagePage> {
             ),
             TextButton(
               child: Text('Yes'),
-              onPressed: () {
-                _authController.signOut();
-                Get.offAllNamed(Routes.login);// Llamar a la función para cerrar sesión
+              onPressed: () async {
+                await context.watch<AuthViewModel>().signOut();// Llama a la función para cerrar sesión
+                Get.offAllNamed(Routes.login);
               },
             ),
           ],
@@ -86,107 +63,15 @@ class _GamesManagePageState extends State<GamesManagePage> {
     );
   }
 
-  void _checkRole() async {
-    UserRepository _userRepo = UserRepository();
-    User? _user = FirebaseAuth.instance.currentUser;
-    if (_user != null && !_user.isAnonymous){
-      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
-      if (check != null) {
-        if(check != "ADMIN") {
-          /// If user is not an Admin, we redirect to HomePage
-          print("User is not an Admin");
-          Get.offAllNamed(Routes.home);
-        }
-      } else {
-        print("The database returned null");
-        Get.offAllNamed(Routes.home);
-      }
-    } else {
-      print("User is Unknown");
-      Get.offAllNamed(Routes.home);
-    }
-  }
-
-  Future<bool> _tryRole() async {
-    UserRepository _userRepo = UserRepository();
-    User? _user = FirebaseAuth.instance.currentUser;
-    if (_user != null && !_user.isAnonymous){
-      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
-      if (check != null) {
-        if(check=="ADMIN") {
-          print("USER IS ADMIN");
-          return true;
-        } else {
-          print("User is not an Admin");
-          return false;
-        }
-      } else {
-        print("The database returned null");
-        return false;
-      }
-    } else {
-      print("User is Unknown");
-      return false;
-    }
-
-  }
-
-  Future<List<Map<String, dynamic>>?> _manageGames() async {
-    List<Map<String, dynamic>>? gamesList = [];
-    try {
-      GameRepository _gameRepo = GameRepository();
-      gamesList = await _gameRepo.getAllGames();
-      if (gamesList != null) {
-        if (gamesList.isNotEmpty) {
-          return gamesList;
-        } else {
-          print("Se recibieron datos vacíos");
-          return null;
-        }
-      } else {
-        return null;
-      }
-    } catch (error) {
-      print("Hubo un error al buscar los juegos en la base de datos: $error");
-      return null;
-    }
-  }
-
-  /// Devuelve true si contiene caracteres no alfanumericos y false si no los contiene
-  bool _containsCharNoAlfanumeric(String texto) {
-    final alfanumerico = RegExp(r'^[a-zA-Z0-9 _\-\:\.\,áéíóúüÁÉÍÓÚÜñÑ]+$');
-    return !alfanumerico.hasMatch(texto);
-  }
-
-  Future<List<Map<String, dynamic>>?> _searchGames(String query) async {
-    if (_containsCharNoAlfanumeric(query)) {
-      return [];
-    } else {
-      try {
-        GameRepository _gameRepo = GameRepository();
-        final List<Map<String, dynamic>>? gamesList = await _gameRepo.getGamesByQuery(query.toLowerCase());
-        if (gamesList != null) {
-          if (gamesList.isNotEmpty) {
-            return gamesList;
-          } else {
-            return [];
-          }
-        } else {
-          print("Query for games answered null");
-          return null;
-        }
-      } catch (error) {
-        print("THERE WAS AN ERROR GETTING THE DATA REQUESTED FROM THE DATABASE: $error");
-        return null;
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    bool _isSidebarOpen = context.watch<PageViewModel>().isSidebarOpen;
+    final _pageVM = context.read<PageViewModel>();
+    final String? userId = context.read<UserViewModel>().getCurrentUserId();
+
     return Scaffold(
       backgroundColor: Colors.grey,
-      bottomNavigationBar: ToolBar(onMenuPressed: _toggleSidebar),
+      bottomNavigationBar: ToolBar(onMenuPressed: _pageVM.toggleSidebar),
       body: Stack(
         children: [
           Column(
@@ -199,7 +84,7 @@ class _GamesManagePageState extends State<GamesManagePage> {
                   color: Colors.white,
                   icon: Icon(Icons.arrow_back),
                 ),
-                title: UserImage(size: 45,),
+                title: UserImage(size: 45, uid: userId ?? ""),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
@@ -222,8 +107,8 @@ class _GamesManagePageState extends State<GamesManagePage> {
                       Text(
                         'GAMES MANAGE PAGE',
                         style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 20,
+                            color: Color(0xFF750202),
+                            fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.height * 0.04,
                             fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -232,7 +117,8 @@ class _GamesManagePageState extends State<GamesManagePage> {
                         children: [
                           SizedBox(width: 20,),
                           SizedBox(
-                            width: 300, height: 50,
+                            width: MediaQuery.of(context).size.width * 0.8,
+                            height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.2 : MediaQuery.of(context).size.height * 0.08,
                             child: SearchBar(
                               backgroundColor: WidgetStatePropertyAll(Color(
                                   0xFFDDDBDB)),
@@ -241,18 +127,17 @@ class _GamesManagePageState extends State<GamesManagePage> {
                                 TextStyle(
                                   fontWeight: FontWeight.w500,
                                   color: Colors.black,
-                                  fontSize: 20,
+                                  fontSize: MediaQuery.of(context).size.width * 0.035,
                                 ),
                               ),
                               leading: Icon(Icons.search),
                               onChanged: (text) {
                                 setState(() {
-                                  _searchText = text;
-                                  if (text.isEmpty) {
-                                    _closeSearch();
-                                  } else {
-                                    _toggleSearch();
-                                  }
+                                  setState(() {
+                                    _searchText = text;
+                                    _searchStatus = text.isNotEmpty;
+                                  });
+                                  context.read<AdminViewModel>().searchGames(text);
                                 });
                               },
                             ),
@@ -262,60 +147,45 @@ class _GamesManagePageState extends State<GamesManagePage> {
                       ),
                       SizedBox(height: 40,),
                       if (!_searchStatus) ...[
-                        FutureBuilder<List<Map<String, dynamic>>?>(
-                          future: _manageGames(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                        Consumer<AdminViewModel>(
+                          builder: (context, gameVM, child) {
+                            if (gameVM.isLoading) {
                               return CircularProgressIndicator();
-                            } else if (snapshot.hasError) {
+                            } else if (gameVM.hasError) {
                               return Text('THERE WAS AN ERROR GETTING THE GAMES');
-                            } else if (snapshot.hasData) {
-                              if(snapshot.data == null) {
-                                return Text('DATA IS NULL');
-                              } else if (snapshot.data!.isEmpty) {
-                                return Text('BUT NOBODY COMES...');
-                              } else {
-                                return Column(
-                                  children: snapshot.data!.map((game) => Column(
-                                    children: [
-                                      ShowGameComponent(game: game),
-                                      SizedBox(height: 20,),
-                                    ],
-                                  ),
-                                  ).toList(),
-                                );
-                              }
+                            } else if (gameVM.games.isEmpty) {
+                              return Text('BUT NOBODY COMES...');
                             } else {
-                              return Text('THERE WAS A UNEXPECTED ERROR');
+                              return Column(
+                                children: gameVM.games.map((game) => Column(
+                                  children: [
+                                    ShowGameComponent(game: game),
+                                    SizedBox(height: 20),
+                                  ],
+                                )).toList(),
+                              );
                             }
                           },
                         ),
                       ],
                       if (_searchStatus) ...[
-                        FutureBuilder<List<Map<String,dynamic>>?>(
-                          future: _searchGames(_searchText),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                        Consumer<AdminViewModel>(
+                          builder: (context, gameVM, child) {
+                            if (gameVM.isLoading) {
                               return CircularProgressIndicator();
-                            } else if (snapshot.hasError) {
-                              return Text('Search result has errors');
-                            } else if (snapshot.hasData) {
-                              if (snapshot.data!.isEmpty) {
-                                return Text('BUT NOBODY COMES...');
-                              } else {
-                                return Column(
-                                  children: snapshot.data!.map((game) => Column(
-                                    children: [
-                                      if (game.isNotEmpty)
-                                        ShowGameComponent(game: game),
-                                        SizedBox(height: 20,),
-                                    ],
-                                  ),
-                                  ).toList(),
-                                );
-                              }
+                            } else if (gameVM.hasError) {
+                              return Text('THERE WAS AN ERROR GETTING THE GAMES');
+                            } else if (gameVM.filteredGames.isEmpty) {
+                              return Text('BUT NOBODY COMES...');
                             } else {
-                              return Text('Search has unexpected error');
+                              return Column(
+                                children: gameVM.filteredGames.map((game) => Column(
+                                  children: [
+                                    ShowGameComponent(game: game),
+                                    SizedBox(height: 20),
+                                  ],
+                                )).toList(),
+                              );
                             }
                           },
                         ),
@@ -331,7 +201,7 @@ class _GamesManagePageState extends State<GamesManagePage> {
           /// BARRA LATERAL + OVERLAY
           if (_isSidebarOpen)
             GestureDetector(
-              onTap: _closeSidebar,
+              onTap: _pageVM.closeSidebar,
               child: Container(
                 color: Colors.black54, // oscurece el fondo
                 width: double.infinity,
@@ -341,11 +211,11 @@ class _GamesManagePageState extends State<GamesManagePage> {
 
           AnimatedPositioned(
             duration: Duration(milliseconds: 300),
-            left: _isSidebarOpen ? 0 : -250,
+            left: _isSidebarOpen ? 0 : -MediaQuery.of(context).size.width * 0.6,
             top: 0,
             bottom: 0,
             child: Container(
-              width: 250,
+              width: MediaQuery.of(context).size.width * 0.6,
               color: Colors.grey[900],
               child: Column(
                 children: [
@@ -355,7 +225,7 @@ class _GamesManagePageState extends State<GamesManagePage> {
                     onTap: () => Get.offAllNamed(Routes.comments),
                   ),
                   FutureBuilder<bool>(
-                    future: _tryRole(),
+                    future: context.read<AuthViewModel>().tryRole(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return CircularProgressIndicator();

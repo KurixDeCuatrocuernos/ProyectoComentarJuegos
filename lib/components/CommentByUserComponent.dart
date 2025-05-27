@@ -3,13 +3,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/components/UserImage.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
+import 'package:game_box/games/models/GameModel.dart';
 import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../viewModels/UserViewModel.dart';
+
 class CommentByUserComponent extends StatefulWidget {
-  final Map<String, dynamic> game;
+  final GameModel game;
   const CommentByUserComponent({super.key, required this.game});
 
   @override
@@ -66,9 +68,10 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
   @override
   Widget build(BuildContext context) {
     final _commentViewModel = context.watch<CommentViewModel>();
-    final _uid= FirebaseAuth.instance.currentUser!.uid;
+    final String? _uid = context.read<UserViewModel>().getCurrentUserId();
+    double _circleSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.2 : MediaQuery.of(context).size.height * 0.06;
     return FutureBuilder<CommentaryModel?>(
-      future: _commentViewModel.isCommentedThisGameByThisUser(widget.game, _uid),
+      future: _commentViewModel.isCommentedThisGameByThisUser(widget.game, _uid!),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
@@ -89,11 +92,11 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                   // Columna con imagen y puntuación
                   Column(
                     children: [
-                      UserImage(size: 50),
+                      UserImage(size: _circleSize, uid: _uid ?? "",),
                       SizedBox(height: 10),
                       Container(
-                        width: 50,
-                        height: 50,
+                        width: _circleSize,
+                        height: _circleSize,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(50),
                           color: Color(_gameRatingColor(snapshot.data!.value.toDouble())),
@@ -104,7 +107,7 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.black,
-                              fontSize: 20,
+                              fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.height * 0.03,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -127,7 +130,7 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.width * 0.045,
                           ),
                         ),
                         SizedBox(height: 5),
@@ -136,7 +139,9 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                           style: TextStyle(
                             fontWeight: FontWeight.w400,
                             color: Colors.white,
+                            fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
                           ),
+                          textAlign: TextAlign.justify,
                           softWrap: true,
                         ),
                         SizedBox(height: 10),
@@ -147,6 +152,7 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
+                              fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
                             ),
                           ),
                         ),

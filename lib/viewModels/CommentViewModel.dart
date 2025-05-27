@@ -1,11 +1,14 @@
 
+import 'dart:math';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:game_box/comments/models/CommentaryModel.dart';
-import 'package:provider/provider.dart';
 
 import '../comments/models/CommentEditProjection.dart';
 import '../comments/models/CommentProjection.dart';
+import '../games/models/GameModel.dart';
+import '../games/models/GameWeightAndValueProjection.dart';
 import '../games/services/IgdbApiRepository.dart';
 import '../repository/CommentaryRepository.dart';
 import '../repository/GameRepository.dart';
@@ -17,7 +20,7 @@ class CommentViewModel extends ChangeNotifier{
   final CommentaryRepository _commentRepo = CommentaryRepository();
   GameRepository _gameRepo = GameRepository();
   final List<CommentaryModel> _comments = [];
-  List<CommentaryModel> get comments => List.unmodifiable(_comments);
+  List<CommentaryModel> get comments => _comments;
 
   void addComment(CommentaryModel comment) {
     _comments.add(comment);
@@ -57,7 +60,7 @@ class CommentViewModel extends ChangeNotifier{
     notifyListeners();
   }
 
-  Future<List<CommentProjection>?> getCommentsFromRepository(Map<String, dynamic> game) async {
+  Future<List<CommentProjection>?> getCommentsFromRepository(GameModel game) async {
     try {
       return await _commentRepo.getCommentsByGame(game);
     } catch (error) {
@@ -116,13 +119,12 @@ class CommentViewModel extends ChangeNotifier{
       print("HUBO UN ERROR AL EDITAR EL COMENTARIO: $error");
       return false;
     }
-    return false;
   }
 
-  Future<bool> addCommentToRepository(CommentaryModel comment, Map<String, dynamic> game, String uid) async {
+  Future<bool> addCommentToRepository(CommentaryModel comment, GameModel game, String uid) async {
     try {
       // print("Revisando si el juego existe");
-      bool gameExists = await _gameRepo.getIfGameExists(game['id']);
+      bool gameExists = await _gameRepo.getIfGameExists(game.id);
       // print("RECOGIDO EL ID: $gameExists");
       if (gameExists) {
         bool added = await _commentRepo.addComment(comment);
@@ -130,7 +132,7 @@ class CommentViewModel extends ChangeNotifier{
         return added;
       } else {
         // print("AÑADIENDO EL JUEGO ANTES QUE EL COMENTARIO");
-        String gameCover = await _apiRepo.getCover(game['cover']);
+        String gameCover = await _apiRepo.getCover(game.coverId);
         // print("SE VA A AÑADIR EL COVER: $gameCover");
         await _gameRepo.addNewGame(game, gameCover);
         // print("SE AÑADIÓ EL JUEGO, VA A AÑADIRSE EL COMENTARIO");
@@ -144,11 +146,11 @@ class CommentViewModel extends ChangeNotifier{
     }
   }
 
-  Future<CommentaryModel?> getCommentaryByUserAndGame(String uid, Map<String, dynamic> game) async {
+  Future<CommentaryModel?> getCommentaryByUserAndGame(String uid, GameModel game) async {
     return await _commentRepo.getCommentaryByUserAndGame(uid, game);
   }
 
-  Future<CommentaryModel?> isCommentedThisGameByThisUser(Map<String,dynamic> game, String uid) async {
+  Future<CommentaryModel?> isCommentedThisGameByThisUser(GameModel game, String uid) async {
     try {
       return await _commentRepo.getCommentaryByUserAndGame(uid, game);
     } catch (error) {
@@ -165,13 +167,13 @@ class CommentViewModel extends ChangeNotifier{
       print("HUBO UN ERROR AL EDITAR EL COMENTARIO: $error");
       return false;
     }
-    return false;
   }
 
   Future<List<CommentaryModel>> getCommentsByUserId(String uid) async {
     List<CommentaryModel> list = [];
     try {
       list = await _commentRepo.getUserCommentariesByUid(uid);
+      print("COMENTARIOS: $list");
       return list;
     } catch (error) {
       print("HUBO UN ERROR AL RECOGER LOS COMENTARIOS DE LA BASE DE DATOS: $error");
@@ -179,34 +181,56 @@ class CommentViewModel extends ChangeNotifier{
     }
   }
 
-  Future<bool> banCommentById(String id) async {
-    try {
-      bool isDeleted = await _commentRepo.banCommentById(id);
-      return isDeleted;
-    } catch (error) {
-      print("HUBO UN ERROR AL BORRAR EL COMENTARIO");
-      return false;
+  Future<int> _getRating(GameModel game) async {
+    /// Recoge los valores de los comentarios y los pesos de los usuarios
+    List<GameWeightAndValueProjection>? list = await _commentRepo.getWeightAndValuesByGame(game);
+    if (list != null) {
+     // print("Firestore ha devuelto el peso: ${list.first.weight} y el valor: ${list.first.value}");
+      double sumWeight = 0;
+      double productValues = 0;
+      for(var element in list) {
+        /// Suma todos los pesos
+        sumWeight += element.weight as double;
+        /// Suma el producto de todos los pesos y valores
+        productValues += (element.value as double) * (element.weight as double);
+      }
+
+      /// dividir la suma de los productos entre la suma de los pesos
+      //print("la media ponderada de: $productValues entre: $sumWeight es: ${(productValues/sumWeight).round()}");
+      return (productValues/sumWeight).round();
+    } else {
+      return 0;
     }
   }
 
-  Future<bool> unbanCommentById(String id) async {
-    try {
-      bool isDeleted = await _commentRepo.unbanCommentById(id);
-      return isDeleted;
-    } catch (error) {
-      print("HUBO UN ERROR AL BORRAR EL COMENTARIO");
-      return false;
+  Future<int> whichRating(GameModel game) async {
+    int? commentaries = await _commentRepo.countCommentsByGame(game);
+    //print("NÚMERO DE COMENTARIOS: $commentaries");
+    if (commentaries != null && commentaries >= 1) {
+      //print("SE HA CALCULADO EL RATING: ${await _getRating(game)}");
+      return await _getRating(game);
+    } else {
+      if (game.rating != null && game.rating is double) {
+        return game.rating!.round();
+      } else {
+        double doubleRandom = Random().nextDouble()*101; /// NÚMERO RANDOM POR SI RATING ES NULO
+        if (game.rating != null) {
+          //print("SE HA DEVUELTO EL RATING DE IGDB: ${game.rating}");
+          return game.rating!.round();
+        } else {
+          //print("SE HA DEVUELTO UN RATING ALEATORIO: $doubleRandom");
+          return doubleRandom.round();
+        }
+      }
     }
   }
 
-  Future<bool> deleteCommentById(String id) async {
-    try {
-      bool isDeleted = await _commentRepo.deleteCommentById(id);
-      return isDeleted;
-    } catch (error) {
-      print("HUBO UN ERROR AL BORRAR EL COMENTARIO");
-      return false;
-    }
+  Future<bool> isCommented(GameModel game) async{
+    /// verificamos si el usuario ha comentado o no este juego
+    User? _user = FirebaseAuth.instance.currentUser;
+    print ("Usuario que ha comentado: $_user");
+    bool cell = await _commentRepo.getIfUserHasCommentedThisGame(_user!, game);
+    return cell;
   }
 
 }

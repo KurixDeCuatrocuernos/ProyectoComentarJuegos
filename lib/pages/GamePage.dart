@@ -1,10 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:game_box/viewModels/AuthViewModel.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
+import 'package:provider/provider.dart';
 
-import '../auth/structure/controllers/AuthController.dart';
 import '../components/CommentByUserComponent.dart';
 import '../components/CommentsListComponent.dart';
 import '../components/SearchPlaceholder.dart';
@@ -13,8 +12,10 @@ import '../components/ToolBar.dart';
 import '../components/UserImage.dart';
 import '../components/UserName.dart';
 import '../components/GameComponent.dart';
-import '../repository/UserRepository.dart';
+import '../games/models/GameModel.dart';
 import '../routes/AppRoutes.dart';
+import '../viewModels/PageViewModel.dart';
+import '../viewModels/UserViewModel.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
@@ -24,36 +25,12 @@ class GamePage extends StatefulWidget {
 }
 class _GamePageState extends State<GamePage> {
 
-  bool _isSidebarOpen = false;
-
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarOpen = !_isSidebarOpen;
-    });
-  }
-
-  void _closeSidebar() {
-    setState(() {
-      _isSidebarOpen = false;
-    });
-  }
-
-  AuthController _authController = AuthController();
-  Map<String, dynamic>? _game;
+  // Si no se recibe un gameId, redirige a una página de error o una pantalla de carga
+  final GameModel _game = Get.arguments ?? Future.delayed(Duration.zero, () {Get.offAllNamed(Routes.home);});  // Redirige a una página de error
 
 @override
 void initState() {
   super.initState();
-
-  // Comprobamos si Get.arguments tiene un valor válido
-  if (Get.arguments != null && Get.arguments.isNotEmpty) {
-    _game = Get.arguments;  // Asigna el gameId desde los argumentos
-  } else {
-    // Si no se recibe un gameId, redirige a una página de error o una pantalla de carga
-    Future.delayed(Duration.zero, () {
-      Get.offAllNamed(Routes.loading);  // Redirige a una página de error
-    });
-  }
 }
 
   void _signOut() {
@@ -72,8 +49,8 @@ void initState() {
             ),
             TextButton(
               child: Text('Yes'),
-              onPressed: () {
-                _authController.signOut();
+              onPressed: () async {
+                await context.read<AuthViewModel>().signOut();
                 Get.offAllNamed(Routes.login);// Llamar a la función para cerrar sesión
               },
             ),
@@ -83,34 +60,15 @@ void initState() {
     );
   }
 
-  Future<bool> _tryRole() async {
-    UserRepository _userRepo = UserRepository();
-    User? _user = FirebaseAuth.instance.currentUser;
-    if (_user != null && !_user.isAnonymous){
-      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
-      if (check != null) {
-        if(check=="ADMIN") {
-          print("USER IS ADMIN");
-          return true;
-        } else {
-          print("User is not an Admin");
-          return false;
-        }
-      } else {
-        print("The database returned null");
-        return false;
-      }
-    } else {
-      print("User is Unknown");
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    bool _isSidebarOpen = context.watch<PageViewModel>().isSidebarOpen;
+    final _pageVM = context.read<PageViewModel>();
+    final String? userId = context.read<UserViewModel>().getCurrentUserId();
+
     return Scaffold(
       backgroundColor: Colors.grey,
-      bottomNavigationBar: ToolBar(onMenuPressed: _toggleSidebar),
+      bottomNavigationBar: ToolBar(onMenuPressed: _pageVM.toggleSidebar),
       body: Stack(
         children: [
           Column(
@@ -123,7 +81,7 @@ void initState() {
                   color: Colors.white,
                   icon: Icon(Icons.arrow_back),
                 ),
-                title: UserImage(size: 45),
+                title: UserImage(size: 45, uid: userId ?? ""),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
@@ -142,21 +100,21 @@ void initState() {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      GameComponent(game: _game!),
+                      GameComponent(game: _game),
                       SizedBox(height: 20),
-                      CommentByUserComponent(game: _game!),
+                      CommentByUserComponent(game: _game),
                       SizedBox(height: 30,),
                       Text(
                         'COMMENTARIES FROM OTHER USERS',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Color(0xFF750202),
-                          fontSize: 30,
+                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.05 : MediaQuery.of(context).size.height * 0.04,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 20,),
-                      CommentsListComponent(game: _game!),
+                      CommentsListComponent(game: _game),
 
                     ],
                   ),
@@ -168,7 +126,7 @@ void initState() {
           /// BARRA LATERAL + OVERLAY
           if (_isSidebarOpen)
             GestureDetector(
-              onTap: _closeSidebar,
+              onTap: _pageVM.closeSidebar,
               child: Container(
                 color: Colors.black54, // oscurece el fondo
                 width: double.infinity,
@@ -178,11 +136,11 @@ void initState() {
 
           AnimatedPositioned(
             duration: Duration(milliseconds: 300),
-            left: _isSidebarOpen ? 0 : -250,
+            left: _isSidebarOpen ? 0 : -MediaQuery.of(context).size.width * 0.6,
             top: 0,
             bottom: 0,
             child: Container(
-              width: 250,
+              width: MediaQuery.of(context).size.width * 0.6,
               color: Colors.grey[900],
               child: Column(
                 children: [
@@ -192,7 +150,7 @@ void initState() {
                     onTap: () => Get.offAllNamed(Routes.home),
                   ),
                   FutureBuilder<bool>(
-                    future: _tryRole(),
+                    future: context.read<AuthViewModel>().tryRole(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return CircularProgressIndicator();

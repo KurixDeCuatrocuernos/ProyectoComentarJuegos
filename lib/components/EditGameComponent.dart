@@ -5,15 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:game_box/games/controllers/GameFormController.dart';
 import 'package:game_box/games/models/GameModel.dart';
 import 'package:game_box/games/utils/GameFormValidator.dart';
-import 'package:game_box/repository/GameRepository.dart';
+import 'package:game_box/viewModels/AdminViewModel.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../routes/AppRoutes.dart';
 
 class EditGameComponent extends StatefulWidget {
-  final Map<String,dynamic> game;
+  final GameModel game;
   const EditGameComponent({super.key, required this.game});
 
   @override
@@ -22,8 +23,6 @@ class EditGameComponent extends StatefulWidget {
 
 class _EditGameComponentState extends State<EditGameComponent> {
   final _formKey = GlobalKey<FormState>();
-  final TextStyle _formTextStyle = TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold,);
-  final TextStyle _inputFormStyle = TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.bold,);
   GameFormValidator _formValidator = GameFormValidator();
   GameFormController _formController = GameFormController();
   DateTime? _selectedDate;
@@ -41,30 +40,29 @@ class _EditGameComponentState extends State<EditGameComponent> {
   }
 
   void _setData() {
-    _formController.idController.text = widget.game['id'].toString();
-    _formController.titleController.text = widget.game['name'].toString();
-    _formController.abstractController.text = widget.game['summary'].toString();
-    _formController.coverIdController.text = widget.game['cover'].toString();
-    _formController.coverPathController.text = widget.game['url'].toString();
-    _formController.rateController.text = widget.game['rating'].toString();
-    _formController.dateController.text = DateFormat('yyyy-MM-dd').format(widget.game['first_release_date'].toDate());
-    _selectedDate = widget.game['first_release_date'].toDate();
+    _formController.idController.text = widget.game.id.toString();
+    _formController.titleController.text = widget.game.name.toString();
+    _formController.abstractController.text = widget.game.summary.toString();
+    _formController.coverIdController.text = widget.game.coverId.toString();
+    _formController.coverPathController.text = widget.game.url.toString();
+    _formController.rateController.text = widget.game.rating.toString();
+    _formController.dateController.text = DateFormat('yyyy-MM-dd').format(widget.game.first_release_date!.toDate());
+    _selectedDate = widget.game.first_release_date!.toDate();
   }
 
   Future<bool> _submitForm() async {
     try {
-      GameRepository _gameRepo = GameRepository();
-      Map<String, dynamic> newData = {
-        'id': widget.game['id'],
-        'name': _formController.titleController.text,
-        'summary': _formController.abstractController.text,
-        'cover': int.parse(_formController.coverIdController.text),
-        'url': _formController.coverPathController.text,
-        'rating': double.tryParse(_formController.rateController.text),
-        'first_release_date': Timestamp.fromDate(_selectedDate!),
-      };
+      GameModel newData = GameModel(
+        id: widget.game.id,
+        name: _formController.titleController.text,
+        summary: _formController.abstractController.text,
+        rating: double.parse(_formController.rateController.text),
+        coverId: int.parse(_formController.coverIdController.text),
+        first_release_date: Timestamp.fromDate(_selectedDate!),
+        url: _formController.coverPathController.text,
+      );
       // print("SE HAN MANDADO LOS DATOS: $newData");
-      bool cell = await _gameRepo.updateGame(newData);
+      bool cell = await context.read<AdminViewModel>().updateGame(newData);
       return cell;
     } catch (error) {
       print("HUBO UN ERROR ACTUALIZANDO LOS DATOS: $error");
@@ -130,6 +128,10 @@ class _EditGameComponentState extends State<EditGameComponent> {
 
   @override
   Widget build(BuildContext context) {
+    double _textSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.height * 0.02;
+    final TextStyle _formTextStyle = TextStyle(color: Colors.white, fontSize: _textSize, fontWeight: FontWeight.bold,);
+    final TextStyle _inputFormStyle = TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.bold,);
+
     return Dialog(
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -166,7 +168,7 @@ class _EditGameComponentState extends State<EditGameComponent> {
                 child: Text(
                   "New Game's Data",
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.04 : MediaQuery.of(context).size.width * 0.05,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -327,7 +329,7 @@ class _EditGameComponentState extends State<EditGameComponent> {
                               FocusScope.of(context).requestFocus(FocusNode());
                               DateTime? pickedDate = await showDatePicker(
                                 context: context,
-                                initialDate: widget.game['first_release_date'].toDate(), // Fecha inicial
+                                initialDate: widget.game.first_release_date!.toDate(), // Fecha inicial
                                 firstDate: DateTime(1900), // Fecha más antigua permitida
                                 lastDate: DateTime(DateTime.now().year+11), // Fecha más reciente permitida
                               );

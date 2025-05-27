@@ -1,21 +1,19 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/components/ShowUserComponent.dart';
-import 'package:game_box/viewModels/UserViewModel.dart';
+import 'package:game_box/viewModels/AdminViewModel.dart';
+import 'package:game_box/viewModels/AuthViewModel.dart';
+import 'package:game_box/viewModels/PageViewModel.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import '../auth/models/UserModel.dart';
-import '../auth/structure/controllers/AuthController.dart';
 import '../components/SearchPlaceholder.dart';
 import '../components/SearchResults.dart';
 import '../components/ToolBar.dart';
 import '../components/UserImage.dart';
 import '../components/UserName.dart';
-import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
+import '../viewModels/UserViewModel.dart';
 
 class UsersManagePage extends StatefulWidget {
   const UsersManagePage({super.key});
@@ -26,40 +24,18 @@ class UsersManagePage extends StatefulWidget {
 
 class _UsersManagePageState extends State<UsersManagePage> {
 
-  AuthController _authController = AuthController();
-  UserRepository _userRepo = UserRepository();
-  bool _isSidebarOpen = false;
-  bool _searchStatus = false;
   String _searchText = '';
+  bool _searchStatus = false;
 
   @override
   void initState() {
     super.initState();
-    _checkRole();
-  }
-
-  void _toggleSearch() {
-    setState(() {
-      _searchStatus = true;
+    /// Esto asegura que el widget esté montado antes de ejecutar viewModel
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await context.read<AuthViewModel>().checkRole();
+      await context.read<AdminViewModel>().loadUsers();
     });
-  }
 
-  void _closeSearch() {
-    setState(() {
-      _searchStatus = false;
-    });
-  }
-
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarOpen = !_isSidebarOpen;
-    });
-  }
-
-  void _closeSidebar() {
-    setState(() {
-      _isSidebarOpen = false;
-    });
   }
 
   void _signOut() {
@@ -78,9 +54,9 @@ class _UsersManagePageState extends State<UsersManagePage> {
             ),
             TextButton(
               child: Text('Yes'),
-              onPressed: () {
-                _authController.signOut();
-                Get.offAllNamed(Routes.login);// Llamar a la función para cerrar sesión
+              onPressed: () async {
+                await context.watch<AuthViewModel>().signOut();// Llama a la función para cerrar sesión
+                Get.offAllNamed(Routes.login);
               },
             ),
           ],
@@ -89,112 +65,15 @@ class _UsersManagePageState extends State<UsersManagePage> {
     );
   }
 
-  void _checkRole() async {
-    UserRepository _userRepo = UserRepository();
-    User? _user = FirebaseAuth.instance.currentUser;
-    if (_user != null && !_user.isAnonymous){
-      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
-      if (check != null) {
-        if(check != "ADMIN") {
-          /// If user is not an Admin, we redirect to HomePage
-          print("User is not an Admin");
-          Get.offAllNamed(Routes.home);
-        }
-      } else {
-        print("The database returned null");
-        Get.offAllNamed(Routes.home);
-      }
-    } else {
-      print("User is Unknown");
-      Get.offAllNamed(Routes.home);
-    }
-  }
-
-  Future<bool> _tryRole() async {
-    User? _user = FirebaseAuth.instance.currentUser;
-    if (_user != null && !_user.isAnonymous){
-      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
-      if (check != null) {
-        if(check=="ADMIN") {
-          print("USER IS ADMIN");
-          return true;
-        } else {
-          print("User is not an Admin");
-          return false;
-        }
-      } else {
-        print("The database returned null");
-        return false;
-      }
-    } else {
-      print("User is Unknown");
-      return false;
-    }
-  }
-  /// Devuelve true si contiene caracteres no alfanumericos y false si no los contiene
-  bool _containsCharNoAlfanumeric(String texto) {
-    final alfanumerico = RegExp(r'^[a-zA-Z0-9 _\-\:\.\,áéíóúüÁÉÍÓÚÜñÑ]+$');
-    return !alfanumerico.hasMatch(texto);
-  }
-
-  Future<List<UserModel>?> _searchUser(String query) async {
-    if (_containsCharNoAlfanumeric(query) == true) {
-      return [];
-    } else {
-      try {
-        final List<UserModel>? users = await _userRepo.getUsersByQuery(query);
-        if (users == null) {
-          return [];
-        } else {
-          if (users.isNotEmpty) {
-            return users;
-          } else {
-            return [];
-          }
-        }
-      } catch (error) {
-        print("Error in Search");
-        return null;
-      }
-    }
-
-  }
-
-  Future<List<UserModel>?> _manageUsers() async {
-    try {
-      List<UserModel>? users = [];
-      print("SE HA PASADO POR _manageUsers()");
-      if (context.watch<UserViewModel>().users.isNotEmpty) {
-        users = context.read<UserViewModel>().users;
-        print("SE DEVOLVIÓ PROVIDER $users");
-        return users;
-      } else {
-        print("SE BUSCÓ EN LA BASE DE DATOS");
-        users = await _userRepo.getAllUsers();
-        if (users != null) {
-          if (users.isNotEmpty) {
-            final userList = context.read<UserViewModel>();
-            userList.addAllUsers(users);
-            return users;
-          } else {
-            print("Se recibieron datos vacíos");
-            return null;
-          }
-        } else {
-          return null;
-        }
-      }
-    } catch (error) {
-      print("HUBO UN ERROR BUSCANDO USUARIOS $error");
-      return null;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final _pageVM = context.read<PageViewModel>();
+    bool _isSidebarOpen = context.watch<PageViewModel>().isSidebarOpen;
+    final String? userId = context.read<UserViewModel>().getCurrentUserId();
+
     return Scaffold(
       backgroundColor: Colors.grey,
-      bottomNavigationBar: ToolBar(onMenuPressed: _toggleSidebar),
+      bottomNavigationBar: ToolBar(onMenuPressed:_pageVM.toggleSidebar),
       body: Stack(
         children: [
           Column(
@@ -207,7 +86,7 @@ class _UsersManagePageState extends State<UsersManagePage> {
                   color: Colors.white,
                   icon: Icon(Icons.arrow_back),
                 ),
-                title: UserImage(size: 45,),
+                title: UserImage(size: 45, uid: userId ?? ""),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
@@ -230,8 +109,8 @@ class _UsersManagePageState extends State<UsersManagePage> {
                       Text(
                         'USERS MANAGE PAGE',
                         style: TextStyle(
-                          color: Color(0xFF000000),
-                          fontSize: 20,
+                          color: Color(0xFF750202),
+                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.08 : MediaQuery.of(context).size.height *0.03,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -240,7 +119,8 @@ class _UsersManagePageState extends State<UsersManagePage> {
                         children: [
                           SizedBox(width: 20,),
                           SizedBox(
-                            width: 300, height: 50,
+                            width: MediaQuery.of(context).size.width * 0.8,
+                            height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.2 : MediaQuery.of(context).size.height * 0.08,
                             child: SearchBar(
                               backgroundColor: WidgetStatePropertyAll(Color(
                                   0xFFDDDBDB)),
@@ -249,19 +129,16 @@ class _UsersManagePageState extends State<UsersManagePage> {
                                 TextStyle(
                                   fontWeight: FontWeight.w500,
                                   color: Colors.black,
-                                  fontSize: 20,
+                                  fontSize: MediaQuery.of(context).size.width * 0.04,
                                 ),
                               ),
                               leading: Icon(Icons.search),
-                              onChanged: (text) {
+                              onChanged: (text) async {
                                 setState(() {
                                   _searchText = text;
-                                  if (text.isEmpty) {
-                                    _closeSearch();
-                                  } else {
-                                    _toggleSearch();
-                                  }
+                                  _searchStatus = text.isNotEmpty;
                                 });
+                                context.read<AdminViewModel>().searchUser(text);
                               },
                             ),
                           ),
@@ -269,59 +146,45 @@ class _UsersManagePageState extends State<UsersManagePage> {
                       ),
                       SizedBox(height: 40,),
                       if (!_searchStatus) ...[
-                        FutureBuilder<List<UserModel>?>(
-                          future: _manageUsers(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                        Consumer<AdminViewModel>(
+                          builder: (context, adminVM, child) {
+                            if (adminVM.isLoading) {
                               return CircularProgressIndicator();
-                            } else if (snapshot.hasError) {
+                            } else if (adminVM.hasError) {
                               return Text('THERE WAS AN ERROR GETTING THE USERS');
-                            } else if (snapshot.hasData) {
-                              if(snapshot.data == null) {
-                                return Text('DATA IS NULL');
-                              } else if (snapshot.data!.isEmpty) {
-                                return Text('BUT NOBODY COMES...');
-                              } else {
-                                return Column(
-                                  children: snapshot.data!.map((user) => Column(
-                                    children: [
-                                      ShowUserComponent(user: user),
-                                      SizedBox(height: 20,),
-                                    ],
-                                  ),
-                                  ).toList(),
-                                );
-                              }
+                            } else if (adminVM.users.isEmpty) {
+                              return Text('BUT NOBODY COMES...');
                             } else {
-                              return Text('THERE WAS A UNEXPECTED ERROR');
+                              return Column(
+                                children: adminVM.users.map((user) => Column(
+                                  children: [
+                                    ShowUserComponent(user: user),
+                                    SizedBox(height: 20),
+                                  ],
+                                )).toList(),
+                              );
                             }
                           },
                         ),
                       ],
                       if (_searchStatus) ...[
-                        FutureBuilder(
-                          future: _searchUser(_searchText),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                        Consumer<AdminViewModel>(
+                          builder: (context, adminVM, child) {
+                            if (adminVM.isLoading) {
                               return CircularProgressIndicator();
-                            } else if (snapshot.hasError) {
-                              return Text('Search result has errors');
-                            } else if (snapshot.hasData) {
-                              if (snapshot.data!.isEmpty) {
-                                return Text('Found no Users match');
-                              } else {
-                                return Column(
-                                  children: snapshot.data!.map((user) => Column(
-                                    children: [
-                                      ShowUserComponent(user: user),
-                                      SizedBox(height: 20,),
-                                    ],
-                                  ),
-                                  ).toList(),
-                                );
-                              }
+                            } else if (adminVM.hasError) {
+                              return Text('THERE WAS AN ERROR GETTING THE USERS');
+                            } else if (adminVM.users.isEmpty) {
+                              return Text('BUT NOBODY COMES...');
                             } else {
-                              return Text('Search has unexpected error');
+                              return Column(
+                                children: adminVM.filteredUsers.map((user) => Column(
+                                  children: [
+                                    ShowUserComponent(user: user),
+                                    SizedBox(height: 20),
+                                  ],
+                                )).toList(),
+                              );
                             }
                           },
                         ),
@@ -339,7 +202,7 @@ class _UsersManagePageState extends State<UsersManagePage> {
           /// BARRA LATERAL + OVERLAY
           if (_isSidebarOpen)
             GestureDetector(
-              onTap: _closeSidebar,
+              onTap: _pageVM.closeSidebar,
               child: Container(
                 color: Colors.black54, // oscurece el fondo
                 width: double.infinity,
@@ -349,11 +212,11 @@ class _UsersManagePageState extends State<UsersManagePage> {
 
           AnimatedPositioned(
             duration: Duration(milliseconds: 300),
-            left: _isSidebarOpen ? 0 : -250,
+            left: _isSidebarOpen ? 0 : -MediaQuery.of(context).size.width * 0.6,
             top: 0,
             bottom: 0,
             child: Container(
-              width: 250,
+              width: MediaQuery.of(context).size.width * 0.6,
               color: Colors.grey[900],
               child: Column(
                 children: [
@@ -363,7 +226,7 @@ class _UsersManagePageState extends State<UsersManagePage> {
                     onTap: () => Get.offAllNamed(Routes.comments),
                   ),
                   FutureBuilder<bool>(
-                    future: _tryRole(),
+                    future: context.read<AuthViewModel>().tryRole(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return CircularProgressIndicator();

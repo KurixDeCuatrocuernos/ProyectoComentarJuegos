@@ -1,14 +1,14 @@
 
 import 'package:flutter/material.dart';
 
-class Loadingpage extends StatelessWidget{
-  const Loadingpage({super.key});
+class LoadingPage extends StatelessWidget{
+  const LoadingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(color: Colors.white),
       ),
     );
   }
