@@ -1,24 +1,19 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/comments/controllers/CommentaryController.dart';
 import 'package:game_box/comments/models/CommentEditProjection.dart';
 import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/comments/utils/CommentaryValidator.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
-import 'package:game_box/repository/GameRepository.dart';
+import 'package:game_box/games/models/GameModel.dart';
 import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:provider/provider.dart';
 
-import '../games/services/IgdbApiRepository.dart';
 import '../pages/GamePage.dart';
 import '../routes/AppRoutes.dart';
 
 class CommentaryComponent extends StatefulWidget {
-  final Map<String, dynamic> game;
+  final GameModel game;
   final bool edit;
 
   const CommentaryComponent({super.key, required this.game, this.edit = false});
@@ -216,7 +211,7 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                                   'body': _commentController.commentController.text,
                                   'value': _commentController.sliderController.value,
                                 });
-                                bool isEdited = await _commentViewModel.editCommentFromRepository(comment, widget.game['id'], _uid!);
+                                bool isEdited = await _commentViewModel.editCommentFromRepository(comment, widget.game.id, _uid!);
                                 if (isEdited == true) {
                                   Get.offAllNamed(Routes.game, arguments: widget.game);
                                 } else {
@@ -230,7 +225,7 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
                                   body: _commentController.commentController.text,
                                   value: _commentController.sliderController.value,
                                   userId: _uid!,
-                                  gameId: widget.game['id'],
+                                  gameId: widget.game.id,
                                 );
                                 bool isCommented = await _commentViewModel.addCommentToRepository(comment, widget.game, _uid);
                                 if (isCommented == true) {

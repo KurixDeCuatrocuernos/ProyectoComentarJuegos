@@ -90,7 +90,7 @@ class GameFormValidator {
   String? isValidUrl(String? text) {
     if (text == null || text.isEmpty) {
       return "This url is too short";
-    } else if (_isValidImageUrl(text)) {
+    } else if (!_isValidImageUrl(text)) {
       return "This url is not a valid image";
     } else {
       return null;

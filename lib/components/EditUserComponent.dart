@@ -1,13 +1,9 @@
-import 'dart:ffi';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_launcher_icons/constants.dart';
 import 'package:game_box/auth/models/UserModel.dart';
-import 'package:game_box/repository/UserRepository.dart';
+import 'package:game_box/viewModels/AdminViewModel.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 
-import '../routes/AppRoutes.dart';
 import '../auth/structure/controllers/AuthController.dart';
 import '../auth/utils/FormValidator.dart';
 
@@ -39,7 +35,6 @@ class _EditUserComponentState extends State<EditUserComponent> {
 
   Future<bool> _submitForm() async {
     try {
-      UserRepository _userRepo = UserRepository();
       UserModel newUser = UserModel(
         uid: widget.user.uid.toString(),
         name: _authController.nameController.text,
@@ -49,7 +44,7 @@ class _EditUserComponentState extends State<EditUserComponent> {
         status: int.parse(_authController.statusController.text),
         image: _authController.imagePathController.text,
       );
-      bool cell = await _userRepo.updateUser(newUser);
+      bool cell = await context.read<AdminViewModel>().updateUser(newUser);
       return cell;
     } catch (error) {
       print("Hubo un error al actualizar los datos: $error");
@@ -292,32 +287,20 @@ class _EditUserComponentState extends State<EditUserComponent> {
                     onPressed: () async {
                       if(_formKey.currentState!.validate()) {
                         bool cell = await _submitForm();
-                        if (cell) {
-                          Get.offAllNamed(Routes.manageUsers);
-                        } else {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext builder) {
-                              return AlertDialog(
-                                title: Icon(Icons.warning, color: Colors.red, size: 32,),
-                                content: Text(
-                                  'There was an error updating the data!',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: Color(0xFF000000),
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                        Navigator.of(context).pop();
+                        if (!cell) {
+                          /// Mensaje de error
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content:
+                              Text(
+                                'Error Updating the data',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Color(0xFFFFFFFF),
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: Text('Ok'),
-                                    onPressed: () {
-                                      Get.back();
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
+                              ),
+                            ),
                           );
                         }
                       }

@@ -6,6 +6,7 @@ import 'package:game_box/components/ShowUserComponent.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:game_box/repository/GameRepository.dart';
 import 'package:game_box/repository/UserRepository.dart';
+import 'package:game_box/viewModels/AdminViewModel.dart';
 import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:game_box/viewModels/GameViewModel.dart';
 import 'package:game_box/viewModels/UserViewModel.dart';
@@ -14,6 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../auth/models/UserModel.dart';
+import '../games/models/GameModel.dart';
 import '../routes/AppRoutes.dart';
 import 'EditCommentComponent.dart';
 
@@ -72,7 +74,7 @@ class ShowCommentComponent extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: 20, // Aproximadamente una línea de texto
+                    minHeight: 20,
                     maxHeight: 400,
                   ),
                   child: SingleChildScrollView(
@@ -116,7 +118,7 @@ class ShowCommentComponent extends StatelessWidget {
       );
     }
 
-    Widget _showDialogGame(Map<String,dynamic> game) {
+    Widget _showDialogGame(GameModel game) {
       return Dialog(
         child: Container(
           decoration: _dialogStyle,
@@ -320,7 +322,7 @@ class ShowCommentComponent extends StatelessWidget {
                             maxLines: 1,
                           ),
                           onPressed: () async {
-                            UserModel? user = await _userViewModel.getUserByIdFromRepository(comment.userId);
+                            UserModel? user = await context.read<AdminViewModel>().getUserByCommentId(comment.userId);
                             if (user == null) {
                               Get.dialog(_showDialogText("USER DATA ERROR"));
                             } else {
@@ -345,7 +347,7 @@ class ShowCommentComponent extends StatelessWidget {
                             maxLines: 1,
                           ),
                           onPressed: () async {
-                            Map<String, dynamic>? game = await _gameViewModel.getGameByIdFromRepository(comment.gameId);
+                            GameModel? game = await context.read<AdminViewModel>().getGameByCommentId(comment.gameId);
                             if (game == null) {
                               Get.dialog(_showDialogText("GAME DATA ERROR"));
                             } else {
@@ -392,7 +394,7 @@ class ShowCommentComponent extends StatelessWidget {
                       bool? del = await _confirmDelete(context);
                       if (del != null) {
                         if(del == true) {
-                          bool isDeleted = await _commentViewModel.deleteCommentById(comment.id);
+                          bool isDeleted = await context.read<AdminViewModel>().deleteCommentById(comment.id);
                           if (isDeleted == true) {
                             Get.offAllNamed(Routes.manageComments);
                           } else {
@@ -409,7 +411,7 @@ class ShowCommentComponent extends StatelessWidget {
                         bool? ban = await _confirmBan(context);
                         if (ban != null) {
                           if(ban == true) {
-                            bool isBanned = await _commentViewModel.banCommentById(comment.id);
+                            bool isBanned = await context.read<AdminViewModel>().banCommentById(comment.id);
                             if (isBanned == true) {
                               Get.offAllNamed(Routes.manageComments);
                             } else {
@@ -426,7 +428,7 @@ class ShowCommentComponent extends StatelessWidget {
                         bool? ban = await _confirmUnban(context);
                         if (ban != null) {
                           if(ban == true) {
-                            bool isBanned = await _commentViewModel.unbanCommentById(comment.id);
+                            bool isBanned = await context.read<AdminViewModel>().unbanCommentById(comment.id);
                             if (isBanned == true) {
                               Get.offAllNamed(Routes.manageComments);
                             } else {

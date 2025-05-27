@@ -3,10 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:game_box/auth/models/UserModel.dart';
 import 'package:game_box/auth/models/UserProjection.dart';
-import 'package:game_box/auth/services/AuthFirebaseRepository.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:get/get_utils/get_utils.dart';
 
 class UserRepository {
 
@@ -33,7 +30,6 @@ class UserRepository {
   }
 
   Future<UserModel?> _getUserDataByUid(String uid) async{
-
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection(_collection)
           .doc(uid)
@@ -99,7 +95,7 @@ class UserRepository {
          return null;
        }
      } else {
-       print('Usuario no encontrado en Firestore');
+       print('Usuario: $uid no encontrado en Firestore');
        return null;
      }
    } catch (error) {
@@ -196,12 +192,15 @@ class UserRepository {
   }
 
   Future<double?> getWeightById(String id) async {
+    //print("Se va a buscar el peso del usuario: $id, en firestore");
     try {
       final DocumentSnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
           .doc(id)
           .get();
+      //print("consulta de peso a Firestore realizada");
       if (response.exists) {
+        //print("peso de usuario devuelto por firestore: ${response['weight']}");
         final weight = response['weight'];
 
         if (weight is double) {
@@ -214,10 +213,11 @@ class UserRepository {
           return null;
         }
       } else {
+        //print("No se encontró peso de ese usuario");
         return null;
       }
     } catch (error) {
-      print("There was an error connecting with the database");
+      //print("There was an error connecting with the database");
       return null;
     }
   }

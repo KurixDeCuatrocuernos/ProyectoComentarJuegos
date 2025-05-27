@@ -12,7 +12,4 @@ class GameFormController extends GetxController {
   TextEditingController coverPathController = TextEditingController();
   TextEditingController dateController = TextEditingController();
   TextEditingController rateController = TextEditingController();
-
-
-
 }

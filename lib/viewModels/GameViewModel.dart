@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../games/models/GameApiProjection.dart';
 import '../games/models/GameModel.dart';
 import '../games/services/IgdbApiRepository.dart';
 import '../repository/CommentaryRepository.dart';
@@ -10,11 +11,18 @@ class GameViewModel extends ChangeNotifier{
   final IgdbApiRepository _apiRepo;
   ///Metodo constructor Shingleton
   GameViewModel(this._apiRepo);
+
+  final CommentaryRepository _commentRepo = CommentaryRepository();
+  final GameRepository _gameRepo = GameRepository();
+
   final List<GameModel> _games = [];
   List<GameModel> get games => List.unmodifiable(_games);
-  GameRepository _gameRepo = GameRepository();
-  CommentaryRepository _commentRepo = CommentaryRepository();
 
+  final Map<String, List<GameApiProjection>> _listGames = {};
+  Map<String, List<GameApiProjection>> get listGames => _listGames;
+
+  final List<GameModel> _commentedGamesList = [];
+  List<GameModel> get commentedGamesList => _commentedGamesList;
 
   void addGame(GameModel game) {
     _games.add(game);
@@ -56,9 +64,9 @@ class GameViewModel extends ChangeNotifier{
 
   /// Hasta aquí métodos por defecto de ViewModel
 
-  Future<Map<String, dynamic>?> getGameByIdFromRepository(int id) async {
+  Future<GameModel?> getGameByIdFromRepository(int id) async {
     try {
-      Map<String, dynamic>? game = await _gameRepo.getGameById(id);
+      GameModel? game = await _gameRepo.getGameById(id);
       return game;
     } catch (error) {
       print("HUBO UN ERROR AL RECOGER LOS DATOS DEL JUEGO");
@@ -66,30 +74,45 @@ class GameViewModel extends ChangeNotifier{
     }
   }
 
-  Future<List<Map<String, dynamic>>?> getAllGamesFromRepository(String uid) async {
-    print("User id: $uid");
+  Future<List<GameModel>?> getAllGamesFromRepository(String uid) async {
+    //print("User id: $uid");
     List<dynamic>? commentedGames = await _commentRepo.getGamesFromCommentsByUserId(uid);
     if (commentedGames == null) {
-      print('COMMENTED GAMES IS NULL');
+      //print('COMMENTED GAMES IS NULL');
       return [];
     } else {
       if (commentedGames.isNotEmpty) {
-        print("Juegos comentados: $commentedGames");
-        List<Map<String, dynamic>> gamesList = [];
+        //print("Juegos comentados: $commentedGames");
+        List<GameModel> gamesList = [];
 
         /// WE SAVE EACH GAME IN THE LIST
         for (var game in commentedGames) {
           if (gamesList.length < 10) {
-            /// ESTO DEBERÍA SUSTITUIRSE POR UNA CONSULTA A FIRESTOR DESDE GAMESREPOSITORY
-            final result = await _apiRepo.getGameById(game.toString());
-            if (result is List && result.isNotEmpty) {
-              gamesList.add(result.first as Map<String, dynamic>);
+            /// ESTO DEBERÍA SUSTITUIRSE POR UNA CONSULTA A FIRESTORE DESDE GAMESREPOSITORY
+            //print("Buscando juego: $game");
+            try{
+              final int gameId = int.parse(game.toString());
+              //print("id transformado $gameId");
+              final result = await _gameRepo.getGameById(gameId);
+              if(result != null) {
+                gamesList.add(result);
+              } else {
+                final apiResult = await _apiRepo.getGameById(game);
+                gamesList.add(apiResult);
+              }
+
+            } catch (error) {
+              print("Error al obtener el juego: $error");
             }
           }
         }
+       // print("Juegos encontrados $gamesList");
 
         if (gamesList.isNotEmpty) {
-          print("LA LISTA DE JUEGOS ES: ${gamesList.toString()}");
+          //print("LA LISTA DE JUEGOS ES: ${gamesList.toString()}");
+          commentedGamesList.clear();
+          commentedGamesList.addAll(gamesList);
+          notifyListeners();
           return gamesList;
         } else {
           print("THERE IS NO GAME IN THE RETURNED LIST");
@@ -101,5 +124,83 @@ class GameViewModel extends ChangeNotifier{
       }
     }
   }
+
+  Future<String> getCoverFromApi(int coverId) async {
+    try {
+      String? cover = await _apiRepo.getCover(coverId);
+      return cover ?? "";
+    } catch (error) {
+      print("Hubo un error recogiendo el cover del juego");
+      return "";
+    }
+  }
+
+  Future<int?> getGenreIdFromApi(String genre) async {
+    try {
+      return await _apiRepo.getGenreId(genre);
+    } catch (error) {
+      print("Error getting the GenreId from API: $error");
+      return null;
+    }
+  }
+
+  Future<List<GameApiProjection>> getAllGamesByGenreFromApi(String genreName, int genre) async {
+    try {
+      List<GameApiProjection> list = await _apiRepo.getAllGamesByGenre(genre);
+      listGames.addAll({genreName: list});
+      print("LISTA DEL GÉNERO: $list");
+      return list;
+    } catch (error) {
+      print("Error Getting the games by genre from API: $error");
+      return [];
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  List<GameApiProjection> getListGamesByGenre(String genre) {
+    try {
+      return listGames[genre] ?? [];
+    } catch (error) {
+      print("NO SE ENCONTRARON JUEGOS DE ESE GÉNERO EN EL VIEW MODEL: $error");
+      return [];
+    }
+  }
+
+  GameApiProjection? getGameFromList(int id) {
+    for(var entry in listGames.entries) {
+      try {
+        final GameApiProjection game = entry.value.firstWhere((g) => g.id == id);
+        return game;
+      } catch (error) {
+        return null;
+      }
+    }
+  }
+
+  Future<GameModel?> getGameByIdFromApi(int id) async {
+    try {
+      final GameModel? game = await _apiRepo.getGameById(id.toString());
+      if (game != null) {
+        addGame(game);
+      }
+      return game;
+    } catch (error) {
+      return null;
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  List<GameModel> getListCommentedGames() {
+    try {
+      return commentedGamesList ?? [];
+    } catch (error) {
+      print("NO SE ENCONTRARON JUEGOS DE ESE GÉNERO EN EL VIEW MODEL: $error");
+      return [];
+    }
+  }
+
+
 
 }

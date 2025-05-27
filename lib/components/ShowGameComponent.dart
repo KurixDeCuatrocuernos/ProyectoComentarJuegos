@@ -1,15 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:game_box/repository/GameRepository.dart';
+import 'package:game_box/viewModels/AdminViewModel.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:intl/intl.dart';
 
+import '../games/models/GameModel.dart';
 import '../routes/AppRoutes.dart';
 import 'EditGameComponent.dart';
 
 class ShowGameComponent extends StatelessWidget {
-  final Map<String, dynamic> game;
+  final GameModel game;
   const ShowGameComponent({super.key, required this.game});
 
   String _formatDateTime(dynamic rawDate) {
@@ -84,21 +85,6 @@ class ShowGameComponent extends StatelessWidget {
     );
   }
 
-  Future<bool> _deleteGame() async {
-    try {
-      GameRepository _gameRepo = GameRepository();
-      bool deleted = await _gameRepo.deleteGameById(game['id'].toString());
-      if (deleted==true) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (error) {
-      print("HUBO UN ERROR DURANTE EL BORRADO DEL JUEGO: $error");
-      return false;
-    }
-  }
-
   Widget _showDeleteGame(context) {
     return Dialog(
       child: ConstrainedBox(
@@ -144,7 +130,7 @@ class ShowGameComponent extends StatelessWidget {
                     ),
                     onPressed: () async {
                       Get.back();
-                      bool isDeleted = await _deleteGame();
+                      bool isDeleted = await context.read<AdminViewModel>().deleteGame();
                       if (isDeleted) {
                         Get.offAllNamed(Routes.manageGames);
                       } else {
@@ -251,50 +237,50 @@ class ShowGameComponent extends StatelessWidget {
                 children: [
                   SizedBox( height: 10,),
                   Text(
-                    'ID: ${game['id'] ?? 'NULL'}' ,
+                    'ID: ${game.id}' ,
                     style: _dataStyle,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox( height: 10,),
                   Text(
-                    'TITLE: ${game['name'] ?? 'NULL'}' ,
+                    'TITLE: ${game.name}' ,
                     style: _dataStyle,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox( height: 10,),
                   TextButton(
                     child: Text(
-                      'ABSTRACT: ${game['summary'] ?? 'NULL'}',
+                      'ABSTRACT: ${game.summary}',
                       style: _dataStyle,
                       overflow: TextOverflow.ellipsis,
                     ),
                     onPressed: () {
-                      if (game['summary'] != null) {
-                        Get.dialog(_summary(game['summary'], context));
+                      if (game.summary != null) {
+                        Get.dialog(_summary(game.summary!, context));
                       }
                     },
                   ),
                   SizedBox( height: 10,),
                   Text(
-                    'COVER ID: ${game['cover'] ?? 'NULL'}',
+                    'COVER ID: ${game.coverId}',
                     style: _dataStyle,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox( height: 10,),
                   Text(
-                    'COVER URL: ${game['url'] ?? 'NULL'}',
+                    'COVER URL: ${game.url ?? 'NULL'}',
                     style: _dataStyle,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox( height: 10,),
                   Text(
-                    'RELEASE DATE: ${_formatDateTime(game['first_release_date'])}',
+                    'RELEASE DATE: ${_formatDateTime(game.first_release_date)}',
                     style: _dataStyle,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox( height: 10,),
                   Text(
-                    'RATING: ${game['rating'] ?? 'NULL'}',
+                    'RATING: ${game.rating}',
                     style: _dataStyle,
                     overflow: TextOverflow.ellipsis,
                   ),

@@ -6,6 +6,7 @@ import 'package:game_box/firebase_options.dart';
 import 'package:game_box/games/services/IgdbApiRepository.dart';
 import 'package:game_box/routes/AppPages.dart';
 import 'package:game_box/routes/AppRoutes.dart';
+import 'package:game_box/viewModels/AdminViewModel.dart';
 import 'package:game_box/viewModels/AuthViewModel.dart';
 import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:game_box/viewModels/GameViewModel.dart';
@@ -37,6 +38,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => SearchResultsUtil()),
           ChangeNotifierProvider(create: (_) => UserViewModel()),
           ChangeNotifierProvider(create: (_) => AuthViewModel()),
+          ChangeNotifierProvider(create: (_) => AdminViewModel()),
           ChangeNotifierProvider(create: (_) => PageViewModel()),
           ///API PROVIDER WITH SHINGLETON
           Provider<IgdbApiRepository>.value(value: igdbRepo),

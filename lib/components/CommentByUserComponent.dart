@@ -3,13 +3,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/components/UserImage.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
+import 'package:game_box/games/models/GameModel.dart';
 import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../viewModels/UserViewModel.dart';
+
 class CommentByUserComponent extends StatefulWidget {
-  final Map<String, dynamic> game;
+  final GameModel game;
   const CommentByUserComponent({super.key, required this.game});
 
   @override
@@ -66,9 +68,9 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
   @override
   Widget build(BuildContext context) {
     final _commentViewModel = context.watch<CommentViewModel>();
-    final _uid= FirebaseAuth.instance.currentUser!.uid;
+    final String? _uid = context.read<UserViewModel>().getCurrentUserId();
     return FutureBuilder<CommentaryModel?>(
-      future: _commentViewModel.isCommentedThisGameByThisUser(widget.game, _uid),
+      future: _commentViewModel.isCommentedThisGameByThisUser(widget.game, _uid!),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
@@ -89,7 +91,7 @@ class _CommentByUserComponentState extends State<CommentByUserComponent> {
                   // Columna con imagen y puntuación
                   Column(
                     children: [
-                      UserImage(size: 50),
+                      UserImage(size: 50, uid: _uid ?? "",),
                       SizedBox(height: 10),
                       Container(
                         width: 50,

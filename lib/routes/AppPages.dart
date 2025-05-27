@@ -1,4 +1,5 @@
 
+import 'package:game_box/auth/structure/bindings/AuthBinding.dart';
 import 'package:game_box/pages/CommentsManagePage.dart';
 import 'package:game_box/pages/CommentsPage.dart';
 import 'package:game_box/pages/GamesManagePage.dart';
@@ -16,19 +17,19 @@ class AppPages {
   static final routes = [
     GetPage(
       name: Routes.loading,
-      page: () => const Loadingpage(),
+      page: () => const LoadingPage(),
     ),
     GetPage(
-        name: Routes.login,
-        page: () => const LoginPage(),
+      name: Routes.login,
+      page: () => const LoginPage(),
     ),
     GetPage(
-        name: Routes.register,
-        page: () => const RegisterPage(),
+      name: Routes.register,
+      page: () => const RegisterPage(),
     ),
     GetPage(
-        name: Routes.home,
-        page: () => const HomePage(),
+      name: Routes.home,
+      page: () => const HomePage(),
     ),
     GetPage(
       name: Routes.game,

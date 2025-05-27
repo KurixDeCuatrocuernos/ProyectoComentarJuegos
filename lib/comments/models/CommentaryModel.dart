@@ -9,7 +9,7 @@ class CommentaryModel {
   final String userId;
   final int gameId;
   final int value;
-  final Timestamp? createdAt;
+  final dynamic createdAt;
   final int? status;
 
   /// Metodo constructor para CommentaryModel

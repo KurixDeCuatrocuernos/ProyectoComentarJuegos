@@ -5,12 +5,13 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:provider/provider.dart';
 
+import '../games/models/GameModel.dart';
 import '../routes/AppRoutes.dart';
 
 class SearchResults extends StatelessWidget {
   SearchResults({super.key});
-
-  void _gameRedirect(Map<String, dynamic> game) {
+  ///Modificar este Map por GameModel y revisar su funcionamiento
+  void _gameRedirect(GameModel game) {
     Get.offAllNamed(Routes.game, arguments: game);
   }
 
@@ -43,7 +44,7 @@ class SearchResults extends StatelessWidget {
                   onPressed: () {
                     _gameRedirect(games[index]);
                   },
-                  child: Text(games[index]['name']),
+                  child: Text(games[index].name),
                 ),
                 ///subtitle: Text(games[index]['id']), id is a String type
               );

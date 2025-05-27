@@ -7,8 +7,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:game_box/repository/UserRepository.dart';
+import 'package:game_box/viewModels/UserViewModel.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:provider/provider.dart';
 
 import '../routes/AppRoutes.dart';
 
@@ -19,8 +21,9 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 class UserImage extends StatefulWidget {
+  final String uid;
   final double size;
-  const UserImage({super.key, required this.size});
+  const UserImage({super.key, required this.size, required this.uid});
 
   @override
   _UserImageState createState() => _UserImageState();
@@ -28,23 +31,25 @@ class UserImage extends StatefulWidget {
 
 class _UserImageState extends State<UserImage> {
   String gravatarAttr = 'mp';
+  String? email = "usuario@correo.com";
 
   @override
   void initState() {
     super.initState();
-    _loadUserImage();
+    _loadUserImage(widget.uid);
+    _getEmail();
   }
 
-  Future<void> _loadUserImage() async {
-    UserRepository _userRepo = UserRepository();
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      String? image = await _userRepo.getUserImageByUid(user.uid);
-      if (image != null && mounted) {
-        setState(() {
-          gravatarAttr = image;
-        });
-      }
+  Future<void> _loadUserImage(String uid) async {
+    String? image = await context.read<UserViewModel>().loadUserImageById(uid);
+    if (image != null && mounted) {
+      setState(() {
+        gravatarAttr = image;
+      });
+    } else {
+      setState(() {
+        gravatarAttr = 'mp';
+      });
     }
   }
 
@@ -56,10 +61,18 @@ class _UserImageState extends State<UserImage> {
     return 'https://www.gravatar.com/avatar/${digest.toString()}?s=${widget.size}&d=$gravatarAttr';
   }
 
+  Future<String?> _getEmail() async {
+    String? mail = await context.read<UserViewModel>().getUserEmailById(widget.uid);
+    if (mail != null) {
+      setState(() {
+        email = mail;
+      });
+    }
+  }
+
   Widget takeUserImage(String gravatarAttr, double sizes) {
-    String? email = FirebaseAuth.instance.currentUser?.email;
     if (email != null) {
-      String gravatarUrl = _generateGravatarUrl(email, gravatarAttr);
+      String gravatarUrl = _generateGravatarUrl(email!, gravatarAttr);
       return ClipOval(
         child: Image.network(
           gravatarUrl,
@@ -72,7 +85,7 @@ class _UserImageState extends State<UserImage> {
         ),
       );
     } else {
-      return Icon(Icons.account_circle, size: sizes);
+      return Icon(Icons.account_circle_rounded, size: sizes);
     }
   }
 

@@ -1,17 +1,12 @@
-import 'dart:math';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/components/CommentaryComponent.dart';
 import 'package:game_box/components/GameImage.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
-import 'package:game_box/repository/UserRepository.dart';
-import 'package:get/get.dart';
-
+import 'package:game_box/games/models/GameModel.dart';
+import 'package:game_box/viewModels/CommentViewModel.dart';
+import 'package:provider/provider.dart';
 
 class GameComponent extends StatelessWidget {
-  final Map<String, dynamic>? game;
+  final GameModel? game;
   const GameComponent({super.key, required this.game});
 
   void showCommentForm(BuildContext context) {
@@ -48,57 +43,6 @@ class GameComponent extends StatelessWidget {
     );
   }
 
-  Future<int> _getRating(Map<String, dynamic> game) async {
-    /// Recoger valor comentario
-    CommentaryRepository _commentRepo = CommentaryRepository();
-    List<Map<String, dynamic>>? list = await _commentRepo.getWeightAndValuesByGame(game);
-    if (list != null) {
-      print("Firestore ha devuelto: $list");
-      double sumWeight = 0;
-      double productValues = 0;
-      for(var element in list!) {
-        /// sum all the weights
-        sumWeight += element['weight'] as double;
-        /// sum the products of the values and weights
-        productValues += (element['value'] as double) * (element['weight'] as double);
-      }
-
-      /// dividir la suma de los productos entre la suma de los pesos
-      print("la media ponderada de: $productValues entre: $sumWeight es: ${(productValues/sumWeight).round()}");
-      return (productValues/sumWeight).round();
-    } else {
-      return 0;
-    }
-  }
-
-  Future<int> _whichRating(Map<String, dynamic> game) async {
-    CommentaryRepository _commentRepo = CommentaryRepository();
-    int? commentaries = await _commentRepo.countCommentsByGame(game);
-    print("NÚMERO DE COMENTARIOS: $commentaries");
-    if (commentaries != null && commentaries >= 1) {
-      print("SE HA CALCULADO EL RATING: ${_getRating(game)}");
-      return _getRating(game);
-    } else {
-      double doubleRandom = Random().nextDouble()*101; /// NÚMERO RANDOM POR SI RATING ES NULO
-      if (game['rating'] != null) {
-        print("SE HA DEVUELTO EL RATING DE IGDB: ${game['rating']}");
-        return game['rating'].round();
-      } else {
-        print("SE HA DEVUELTO UN RATING ALEATORIO: $doubleRandom");
-        return doubleRandom.round();
-      }
-    }
-  }
-
-
-  Future<bool> _isCommented() async{
-  /// verificamos si el usuario ha comentado o no este juego
-    CommentaryRepository _commentRepo = CommentaryRepository();
-    User? _user = FirebaseAuth.instance.currentUser;
-    bool cell = await _commentRepo.getIfUserHasCommentedThisGame(_user!, game);
-    return cell;
-  }
-
   int _gameRatingColor(int rating) {
     if (rating > 0 && rating < 10) {
       return 0xFFBC0101; // Color rojo
@@ -125,7 +69,6 @@ class GameComponent extends StatelessWidget {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -139,13 +82,13 @@ class GameComponent extends StatelessWidget {
             SizedBox(
               width: 128,
               height: 256,
-              child: game?['url'] != null ? Image.network(game!['url']): GameImage(game: game!), /// Hay que cambiarlo por la imagen correspondiente
+              child: game?.url != null ? Image.network(game!.url!): GameImage(game: game!), /// Hay que cambiarlo por la imagen correspondiente
             ),
             SizedBox(
               width: 128,
               child:
               Text(
-                  game?['name'],
+                  game!.name,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -154,7 +97,7 @@ class GameComponent extends StatelessWidget {
               ),
             ),
             FutureBuilder(
-                future: _whichRating(game!),
+                future: context.read<CommentViewModel>().whichRating(game!),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
@@ -192,7 +135,7 @@ class GameComponent extends StatelessWidget {
         SizedBox(
           width: 320,
           child: Text(
-              game?['summary'] != null ? game!['summary'] : 'This game has no abstract',
+              game?.summary != null ? game!.summary! : 'This game has no abstract',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
@@ -205,7 +148,7 @@ class GameComponent extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             FutureBuilder<bool>(
-              future: _isCommented(),
+              future: context.read<CommentViewModel>().isCommented(game!),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   // Mientras espera el resultado del future

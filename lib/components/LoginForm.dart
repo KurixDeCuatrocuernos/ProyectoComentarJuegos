@@ -27,8 +27,8 @@ class LoginForm extends StatelessWidget{
         ),
         color: Colors.white,
         child: Container(
-          width: double.infinity,
-          height: double.infinity,
+          width: MediaQuery.of(context).size.width * 1,
+          height: MediaQuery.of(context).size.height * 1,
           margin: EdgeInsets.symmetric(
             vertical: 20,
             horizontal: 20,

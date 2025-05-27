@@ -1,21 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/components/UserImage.dart';
 import 'package:game_box/components/UserName.dart';
-import 'package:game_box/games/services/IgdbApiRepository.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
-import 'package:game_box/repository/GameRepository.dart';
 import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:game_box/viewModels/PageViewModel.dart';
-import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
-import '../routes/AppRoutes.dart';
 
 class UserCommentsListComponent extends StatelessWidget {
   const UserCommentsListComponent({super.key});
@@ -67,7 +59,7 @@ class UserCommentsListComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final _pageViewModel = context.watch<PageViewModel>();
-    final _commentViewModel = context.watch<CommentViewModel>();
+    final _commentViewModel = context.read<CommentViewModel>();
 
     return Container(
       child: Column(
@@ -122,7 +114,7 @@ class UserCommentsListComponent extends StatelessWidget {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  UserImage(size: 64),
+                                  UserImage(size: 64, uid: comment.userId),
                                   UserName(),
                                   Container(
                                     width: 64,

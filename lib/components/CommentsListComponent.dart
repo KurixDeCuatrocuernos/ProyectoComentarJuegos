@@ -2,14 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/comments/models/CommentProjection.dart';
 import 'package:game_box/components/UserImage.dart';
-import 'package:game_box/components/UserName.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
+import 'package:game_box/games/models/GameModel.dart';
 import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class CommentsListComponent extends StatefulWidget {
-  final Map<String, dynamic> game;
+  final GameModel game;
   const CommentsListComponent({super.key, required this.game});
 
   @override
@@ -93,11 +92,11 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                       /// Header con imagen y nombre de usuario
                       Row(
                         children: [
-                          UserImage(size: 50),
+                          UserImage(size: 50, uid: comment.comment.userId),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              comment.username,
+                              comment.userId,
                               style: TextStyle(
                                 fontSize: 20,
                                 color: Colors.white,

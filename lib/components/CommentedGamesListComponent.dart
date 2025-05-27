@@ -1,22 +1,40 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/components/GameImage.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:game_box/viewModels/GameViewModel.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:provider/provider.dart';
 
-import '../games/services/IgdbApiRepository.dart';
+import '../games/models/GameModel.dart';
 import '../routes/AppRoutes.dart';
 
-class CommentedGamesListComponent extends StatelessWidget {
+class CommentedGamesListComponent extends StatefulWidget {
   final User? user;
+
   const CommentedGamesListComponent({super.key, required this.user});
 
   @override
+  State<CommentedGamesListComponent> createState() => _CommentedGamesListComponent();
+}
+
+class _CommentedGamesListComponent extends State<CommentedGamesListComponent> {
+  late Future<List<GameModel>?> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    final viewModel = context.read<GameViewModel>();
+    if (viewModel.getListCommentedGames().isEmpty) {
+      _future = viewModel.getAllGamesFromRepository(widget.user!.uid);
+    } else {
+      _future = Future.value(viewModel.getListCommentedGames());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final _gameViewModel = context.watch<GameViewModel>();
+    final commentedGames = context.watch<GameViewModel>().getListCommentedGames();
 
     return Container(
       height: 200,
@@ -33,39 +51,20 @@ class CommentedGamesListComponent extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 5),
-          FutureBuilder(
-            future: _gameViewModel.getAllGamesFromRepository(user!.uid),
+          const SizedBox(height: 5),
+          commentedGames.isNotEmpty
+              ? _buildGamesList(commentedGames)
+              : FutureBuilder<List<GameModel>?>(
+            future: _future,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator(color: Colors.white));
+                return const Center(child: CircularProgressIndicator(color: Colors.white));
               } else if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red));
+                return Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Text('No hay juegos', style: TextStyle(color: Colors.white));
+                return const Text('No hay juegos', style: TextStyle(color: Colors.white));
               } else {
-                final gameIds = snapshot.data!;
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: gameIds
-                        .where((game) => game['cover'] != null)
-                        .map((game) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: SizedBox(
-                        width: 64,
-                        height: 128,
-                        child: GestureDetector(
-                          child: GameImage(game: game),
-                          onTap: () {
-                            Get.toNamed(Routes.game, arguments: game);
-                          },
-                        ),
-                      ),
-                    ))
-                        .toList(),
-                  ),
-                );
+                return _buildGamesList(snapshot.data!);
               }
             },
           ),
@@ -73,4 +72,29 @@ class CommentedGamesListComponent extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildGamesList(List<GameModel> games) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: games
+            .where((game) => game.coverId != null)
+            .map((game) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: SizedBox(
+            width: 64,
+            height: 128,
+            child: GestureDetector(
+              child: GameImage(game: game),
+              onTap: () {
+                Get.toNamed(Routes.game, arguments: game);
+              },
+            ),
+          ),
+        ))
+            .toList(),
+      ),
+    );
+  }
 }
+

@@ -2,8 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/components/UserCommentsListComponent.dart';
+import 'package:game_box/viewModels/AuthViewModel.dart';
+import 'package:game_box/viewModels/PageViewModel.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:provider/provider.dart';
 
 import '../auth/structure/controllers/AuthController.dart';
 import '../components/SearchPlaceholder.dart';
@@ -13,6 +16,7 @@ import '../components/UserImage.dart';
 import '../components/UserName.dart';
 import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
+import '../viewModels/UserViewModel.dart';
 
 class CommentsPage extends StatefulWidget {
   const CommentsPage({super.key});
@@ -22,22 +26,6 @@ class CommentsPage extends StatefulWidget {
 }
 
 class _CommentsPageState extends State<CommentsPage> {
-
-  bool _isSidebarOpen = false;
-
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarOpen = !_isSidebarOpen;
-    });
-  }
-
-  void _closeSidebar() {
-    setState(() {
-      _isSidebarOpen = false;
-    });
-  }
-
-  AuthController _authController = AuthController();
 
   void _signOut() {
     showDialog(
@@ -55,8 +43,8 @@ class _CommentsPageState extends State<CommentsPage> {
             ),
             TextButton(
               child: Text('Yes'),
-              onPressed: () {
-                _authController.signOut();
+              onPressed: () async {
+                await context.read<AuthViewModel>().signOut();
                 Get.offAllNamed(Routes.login);
               },
             ),
@@ -66,34 +54,15 @@ class _CommentsPageState extends State<CommentsPage> {
     );
   }
 
-  Future<bool> _tryRole() async {
-    UserRepository _userRepo = UserRepository();
-    User? _user = FirebaseAuth.instance.currentUser;
-    if (_user != null && !_user.isAnonymous){
-      final String? check = await _userRepo.getUserRoleByUid(_user.uid);
-      if (check != null) {
-        if(check=="ADMIN") {
-          print("USER IS ADMIN");
-          return true;
-        } else {
-          print("User is not an Admin");
-          return false;
-        }
-      } else {
-        print("The database returned null");
-        return false;
-      }
-    } else {
-      print("User is Unknown");
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final _pageVM = context.read<PageViewModel>();
+    bool _isSidebarOpen = context.watch<PageViewModel>().isSidebarOpen;
+    final String? userId = context.read<UserViewModel>().getCurrentUserId();
+
     return Scaffold(
       backgroundColor: Colors.grey,
-      bottomNavigationBar: ToolBar(onMenuPressed: _toggleSidebar),
+      bottomNavigationBar: ToolBar(onMenuPressed: _pageVM.toggleSidebar),
       body: Stack(
         children: [
           Column(
@@ -106,7 +75,7 @@ class _CommentsPageState extends State<CommentsPage> {
                   color: Colors.white,
                   icon: Icon(Icons.arrow_back),
                 ),
-                title: UserImage(size: 45,),
+                title: UserImage(size: 45, uid: userId ?? ""),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
@@ -141,7 +110,7 @@ class _CommentsPageState extends State<CommentsPage> {
           /// BARRA LATERAL + OVERLAY
           if (_isSidebarOpen)
             GestureDetector(
-              onTap: _closeSidebar,
+              onTap: _pageVM.closeSidebar,
               child: Container(
                 color: Colors.black54, // oscurece el fondo
                 width: double.infinity,
@@ -165,7 +134,7 @@ class _CommentsPageState extends State<CommentsPage> {
                     onTap: () => Get.offAllNamed(Routes.home),
                   ),
                   FutureBuilder<bool>(
-                    future: _tryRole(),
+                    future: context.read<AuthViewModel>().tryRole(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return CircularProgressIndicator();

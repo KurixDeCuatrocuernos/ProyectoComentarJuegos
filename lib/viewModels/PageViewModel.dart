@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
+import '../games/models/GameModel.dart';
+import '../repository/CommentaryRepository.dart';
 import '../repository/GameRepository.dart';
 import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
@@ -12,6 +14,7 @@ import '../routes/AppRoutes.dart';
 class PageViewModel extends ChangeNotifier {
 
   final  GameRepository _gameRepo = GameRepository();
+  final CommentaryRepository _commentRepo = CommentaryRepository();
 
   bool _isSidebarOpen = false;
   bool _searchStatus = false;
@@ -64,8 +67,7 @@ class PageViewModel extends ChangeNotifier {
 
   Future<void>? redirectToGameById(int gameId) async {
     try {
-      Map<String, dynamic>? game = {};
-      game = await _gameRepo.getGameById(gameId);
+      GameModel? game = await _gameRepo.getGameById(gameId);
       if (game != null) {
         Get.toNamed(Routes.game, arguments: game);
       } else {
@@ -75,4 +77,15 @@ class PageViewModel extends ChangeNotifier {
       print("HUBO UN ERROR AL BUSCAR EL JUEGO");
     }
   }
+
+  Future<bool> haveCommented() async{
+    User? _user = FirebaseAuth.instance.currentUser;
+    bool commented = false;
+    if (_user != null) {
+      commented = await _commentRepo.getIfUserHasCommented(_user);
+    }
+    print("EL USUARIO HA COMENTADO: $commented");
+    return commented;
+  }
+
 }

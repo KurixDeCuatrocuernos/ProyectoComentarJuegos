@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:game_box/comments/controllers/CommentaryController.dart';
 import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/comments/utils/CommentaryValidator.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
