@@ -67,7 +67,7 @@ class UserCommentsListComponent extends StatelessWidget {
           Text(
             'Your Comments',
             style: TextStyle(
-              fontSize: 30,
+              fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.08 : MediaQuery.of(context).size.width * 0.08,
               fontWeight: FontWeight.bold,
               color: Color(0xFF750202),
             ),
@@ -90,6 +90,7 @@ class UserCommentsListComponent extends StatelessWidget {
                   ),
                 );
               } else if (snapshot.hasData) {
+                double _circleSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.2 : MediaQuery.of(context).size.height * 0.06;
                 /// If future has data, shows it
                 return Container(
                   child: Column(
@@ -103,7 +104,7 @@ class UserCommentsListComponent extends StatelessWidget {
                             _pageViewModel.redirectToGameById(comment.gameId);
                           },
                           child: Container(
-                          width: 600,
+                          width: MediaQuery.of(context).size.width * 0.8,
                           decoration: BoxDecoration(
                             color: Color(0xFF1C1B1B),
                             borderRadius: BorderRadius.circular(15),
@@ -114,11 +115,11 @@ class UserCommentsListComponent extends StatelessWidget {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  UserImage(size: 64, uid: comment.userId),
+                                  UserImage(size: _circleSize, uid: comment.userId),
                                   UserName(),
                                   Container(
-                                    width: 64,
-                                    height: 64,
+                                    width: _circleSize,
+                                    height: _circleSize,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(50),
                                       color: Color(_gameRatingColor(comment.value.toDouble())),
@@ -129,7 +130,7 @@ class UserCommentsListComponent extends StatelessWidget {
                                         style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 30,
+                                          fontSize: _circleSize/2,
                                         ),
                                       ),
                                     ),
@@ -149,7 +150,7 @@ class UserCommentsListComponent extends StatelessWidget {
                                         maxLines: 1,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                          fontSize: 20,
+                                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.width * 0.045,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
@@ -168,7 +169,7 @@ class UserCommentsListComponent extends StatelessWidget {
                                       child: Text(
                                         comment.body,
                                         style: TextStyle(
-                                          fontSize: 16,
+                                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
                                           fontWeight: FontWeight.normal,
                                           color: Colors.white,
                                         ),
@@ -188,7 +189,7 @@ class UserCommentsListComponent extends StatelessWidget {
                                       _formatDateTime(comment.createdAt),
                                       style: TextStyle(
                                         color: Colors.white70,
-                                        fontSize: 13,
+                                        fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),

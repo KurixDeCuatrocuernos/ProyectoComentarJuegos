@@ -176,5 +176,14 @@ class UserViewModel extends ChangeNotifier{
       return null;
     }
   }
+  
+  Future<String?> getCurrentUserNameById(String id) async {
+    try {
+      return await _userRepo.getUserNameByUid(id);
+    } catch (error) {
+      print("No se encontró el email del usuario: $id");
+      return null;
+    }
+  }
 
 }

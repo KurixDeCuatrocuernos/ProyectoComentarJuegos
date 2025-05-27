@@ -101,10 +101,11 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
   Widget build(BuildContext context) {
     final String? _uid = FirebaseAuth.instance.currentUser?.uid;
     final _commentViewModel = context.watch<CommentViewModel>();
+    final TextStyle _inputStyle = TextStyle(fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06 : MediaQuery.of(context).size.height * 0.02, color: Colors.white, fontWeight: FontWeight.bold);
 
     return Container(
-      width: 300,
-      height: 600,
+      width: MediaQuery.of(context).size.width * 0.8,
+      height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.8 : MediaQuery.of(context).size.height * 0.6,
       decoration: BoxDecoration(
         color: Color(0xFF120B0B), // Color de fondo
         borderRadius: BorderRadius.circular(20),
@@ -113,147 +114,145 @@ class _CommentaryComponentState extends State<CommentaryComponent> {
           width: 4,
         ),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: SizedBox(),),
-              IconButton(
-                onPressed: () {Navigator.of(context).pop();},
-                icon: Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  weight: 100,
-                ),
-              ),
-            ],
-          ),
-          Text(
-            'YOUR VALORATION',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          Container(
-            width: 250,
-            height: 400,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  SizedBox(height: 10),
-                  Flexible(
-                    child: TextFormField(
-                      style: TextStyle(color: Colors.white),
-                      validator: _commentValidator.isValidCommentary,
-                      controller: _commentController.titleController,
-                      decoration: const InputDecoration(
-                        hintText: 'Resume your opinion about this videogame in a few words',
-                      ),
-                    ),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(child: SizedBox(),),
+                IconButton(
+                  onPressed: () {Navigator.of(context).pop();},
+                  icon: Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    weight: 100,
                   ),
-                  SizedBox(height: 10),
-                  SizedBox(),
-                  Flexible(
-                    child: SingleChildScrollView(
+                ),
+              ],
+            ),
+            Text(
+              'YOUR VALORATION',
+              style: TextStyle(
+                fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.height * 0.03,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.75,
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    SizedBox(height: 10),
+                    Flexible(
                       child: TextFormField(
-                        style: TextStyle(color: Colors.white),
+                        style: _inputStyle,
                         validator: _commentValidator.isValidCommentary,
-                        controller: _commentController.commentController,
+                        controller: _commentController.titleController,
                         decoration: const InputDecoration(
-                          hintText: 'What do you think about the videogame?',
+                          hintText: 'Resume your opinion about this videogame in a few words',
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 20,),
-                  Obx(() {
-                    return Column(
-                      children: [
-                        Text(
-                          "${_commentController.sliderController.value}",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    SizedBox(height: 10),
+                    SizedBox(),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: TextFormField(
+                          style: _inputStyle,
+                          validator: _commentValidator.isValidCommentary,
+                          controller: _commentController.commentController,
+                          decoration: const InputDecoration(
+                            hintText: 'What do you think about the videogame?',
                           ),
                         ),
-                        Slider(
-                          value: _commentController.sliderController.value.toDouble(),
-                          min: 0,
-                          max: 100,
-                          divisions: 100,
-                          label: '${_commentController.sliderController.value}',
-                          onChanged: (double newValue) {
-                            _commentController.sliderController.value = newValue.toInt();
-                          },
-                        ),
-                        Text(_commentValidator.isValidValue(_commentController.sliderController.value.toString()) ?? ''),
-                      ],
-                    );
-                  }),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      shape: BoxShape.circle,
+                      ),
                     ),
-                    child: IconButton(
-                        onPressed: () async {
-                          bool cell = true;
-                          if (_formKey.currentState!.validate()) {
-                            try {
-                              if (widget.edit==true){
-                                print("EDITANDO COMENTARIO");
-                                CommentEditProjection comment = CommentEditProjection.fromMap({
-                                  'title': _commentController.titleController.text,
-                                  'body': _commentController.commentController.text,
-                                  'value': _commentController.sliderController.value,
-                                });
-                                bool isEdited = await _commentViewModel.editCommentFromRepository(comment, widget.game.id, _uid!);
-                                if (isEdited == true) {
-                                  Get.offAllNamed(Routes.game, arguments: widget.game);
+                    SizedBox(height: 20,),
+                    Obx(() {
+                      return Column(
+                        children: [
+                          Text(
+                            "${_commentController.sliderController.value}",
+                            style: _inputStyle,
+                          ),
+                          Slider(
+                            value: _commentController.sliderController.value.toDouble(),
+                            min: 0,
+                            max: 100,
+                            divisions: 100,
+                            label: '${_commentController.sliderController.value}',
+                            onChanged: (double newValue) {
+                              _commentController.sliderController.value = newValue.toInt();
+                            },
+                          ),
+                          Text(_commentValidator.isValidValue(_commentController.sliderController.value.toString()) ?? ''),
+                        ],
+                      );
+                    }),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                          onPressed: () async {
+                            bool cell = true;
+                            if (_formKey.currentState!.validate()) {
+                              try {
+                                if (widget.edit==true){
+                                  print("EDITANDO COMENTARIO");
+                                  CommentEditProjection comment = CommentEditProjection.fromMap({
+                                    'title': _commentController.titleController.text,
+                                    'body': _commentController.commentController.text,
+                                    'value': _commentController.sliderController.value,
+                                  });
+                                  bool isEdited = await _commentViewModel.editCommentFromRepository(comment, widget.game.id, _uid!);
+                                  if (isEdited == true) {
+                                    Get.offAllNamed(Routes.game, arguments: widget.game);
+                                  } else {
+                                    Get.dialog(_showErrorMessage('There was a problem adding the new comment'));
+                                  }
                                 } else {
-                                  Get.dialog(_showErrorMessage('There was a problem adding the new comment'));
+                                  print("GUARDANDO NUEVO COMENTARIO");
+                                  CommentaryModel comment = CommentaryModel(
+                                    id: "null",
+                                    title: _commentController.titleController.text,
+                                    body: _commentController.commentController.text,
+                                    value: _commentController.sliderController.value,
+                                    userId: _uid!,
+                                    gameId: widget.game.id,
+                                  );
+                                  bool isCommented = await _commentViewModel.addCommentToRepository(comment, widget.game, _uid);
+                                  if (isCommented == true) {
+                                    Get.offAllNamed(Routes.game, arguments: widget.game);
+                                  } else {
+                                    Get.dialog(_showErrorMessage('There was a problem adding the new comment'));
+                                  }
                                 }
-                              } else {
-                                print("GUARDANDO NUEVO COMENTARIO");
-                                CommentaryModel comment = CommentaryModel(
-                                  id: "null",
-                                  title: _commentController.titleController.text,
-                                  body: _commentController.commentController.text,
-                                  value: _commentController.sliderController.value,
-                                  userId: _uid!,
-                                  gameId: widget.game.id,
-                                );
-                                bool isCommented = await _commentViewModel.addCommentToRepository(comment, widget.game, _uid);
-                                if (isCommented == true) {
-                                  Get.offAllNamed(Routes.game, arguments: widget.game);
-                                } else {
-                                  Get.dialog(_showErrorMessage('There was a problem adding the new comment'));
-                                }
+                              } catch (error) {
+                                cell = false;
                               }
-                            } catch (error) {
-                              cell = false;
+                              if (cell == true) {
+                                Get.off(() => GamePage(), arguments: widget.game);
+                              }
+                            } else {
+                              print("Try again!");
                             }
-                            if (cell == true) {
-                              Get.off(() => GamePage(), arguments: widget.game);
-                            }
-                          } else {
-                            print("Try again!");
-                          }
-                        },
-                        color: Colors.green,
-                        iconSize: 40,
-                        icon: Icon(Icons.check)
+                          },
+                          color: Colors.green,
+                          iconSize: 40,
+                          icon: Icon(Icons.check)
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

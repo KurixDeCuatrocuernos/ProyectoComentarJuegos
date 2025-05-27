@@ -207,8 +207,9 @@ class ShowUserComponent extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    double _textSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06 : MediaQuery.of(context).size.height * 0.015;
     return Container(
-      width: 400,
+      width: MediaQuery.of(context).size.width * 0.8,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         color: user.status==5 ? Color(0xFF4E0101) : Colors.black,
@@ -216,8 +217,9 @@ class ShowUserComponent extends StatelessWidget {
       child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              UserImage(size: 40, uid: user.uid),
+              UserImage(size: MediaQuery.of(context).size.width * 0.1, uid: user.uid),
               Column(
                 children: [
                   SizedBox(height: 10,),
@@ -225,9 +227,10 @@ class ShowUserComponent extends StatelessWidget {
                     'Username: ${user.name ?? 'NULL'}',
                     style: TextStyle(
                       color: user.status ==5 ? Colors.black : Colors.white,
-                      fontSize: 18,
+                      fontSize: _textSize,
                       fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 10,),
@@ -235,9 +238,10 @@ class ShowUserComponent extends StatelessWidget {
                     'Email: ${user.email ?? 'NULL'}',
                     style: TextStyle(
                       color: user.status ==5 ? Colors.black : Colors.white,
-                      fontSize: 18,
+                      fontSize: _textSize,
                       fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 10,),
@@ -245,9 +249,10 @@ class ShowUserComponent extends StatelessWidget {
                     'Start Date: ${_formatDateTime(user.createdAt)}',
                     style: TextStyle(
                       color: user.status ==5 ? Colors.black : Colors.white,
-                      fontSize: 18,
+                      fontSize: _textSize,
                       fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 10,),
@@ -255,9 +260,10 @@ class ShowUserComponent extends StatelessWidget {
                     'Role: ${user.role ?? 'NULL'}',
                     style: TextStyle(
                       color: user.status == 5 ? Colors.black : Colors.white,
-                      fontSize: 18,
+                      fontSize: _textSize,
                       fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 10,),

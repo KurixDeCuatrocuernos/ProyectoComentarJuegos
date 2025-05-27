@@ -37,8 +37,7 @@ class _CommentedGamesListComponent extends State<CommentedGamesListComponent> {
     final commentedGames = context.watch<GameViewModel>().getListCommentedGames();
 
     return Container(
-      height: 200,
-      width: double.infinity,
+      width: MediaQuery.of(context).size.width * 1.0,
       color: Colors.black,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

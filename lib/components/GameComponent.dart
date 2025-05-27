@@ -73,74 +73,79 @@ class GameComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          spacing: 20,
-          children: [
-            SizedBox(
-              width: 10,
-            ),
-            SizedBox(
-              width: 128,
-              height: 256,
-              child: game?.url != null ? Image.network(game!.url!): GameImage(game: game!), /// Hay que cambiarlo por la imagen correspondiente
-            ),
-            SizedBox(
-              width: 128,
-              child:
-              Text(
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child:        Row(
+            spacing: 20,
+            children: [
+              SizedBox(
+                width: 10,
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.3  : MediaQuery.of(context).size.width * 0.3,
+                height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.3 : MediaQuery.of(context).size.height * 0.3,
+                child: game?.url != null ? Image.network(game!.url!): GameImage(game: game!), /// Hay que cambiarlo por la imagen correspondiente
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.3,
+                child:
+                Text(
                   game!.name,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  fontStyle: FontStyle.italic,
+                  style: TextStyle(
+                    fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.05 : MediaQuery.of(context).size.height * 0.025,
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
-            ),
-            FutureBuilder(
-                future: context.read<CommentViewModel>().whichRating(game!),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    print("ERROR: ${snapshot.error}");
-                    return Text("Error");
-                  } else if (snapshot.hasData) {
-                    return Container(
-                      width: 64,
-                      height: 64,
-                      decoration:
-                      BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(_gameRatingColor(snapshot.data!)),
-                      ),
-                      alignment: Alignment.center,
-                      child:
-                      Text(
-                        snapshot.data!.toString(),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+              FutureBuilder(
+                  future: context.read<CommentViewModel>().whichRating(game!),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      print("ERROR: ${snapshot.error}");
+                      return Text("Error");
+                    } else if (snapshot.hasData) {
+                      return Container(
+                        width: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.1 : MediaQuery.of(context).size.height * 0.07,
+                        height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.1 : MediaQuery.of(context).size.height * 0.07,
+                        decoration:
+                        BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(_gameRatingColor(snapshot.data!)),
                         ),
-                      ),
-                    );
-                  } else {
-                    return Text("Empty Data");
+                        alignment: Alignment.center,
+                        child:
+                        Text(
+                          snapshot.data!.toString(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.05 : MediaQuery.of(context).size.height * 0.045,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    } else {
+                      return Text("Empty Data");
+                    }
                   }
-                }
-            ),
-          ],
+              ),
+              SizedBox(width: 10,),
+            ],
+          ),
         ),
         SizedBox(
-          width: 320,
+          width: MediaQuery.of(context).size.width * 0.8,
           child: Text(
               game?.summary != null ? game!.summary! : 'This game has no abstract',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.04 : MediaQuery.of(context).size.height * 0.02,
               fontStyle: FontStyle.italic,
             ),
+            textAlign: TextAlign.justify,
           ),
         ),
         SizedBox(height: 20,),
@@ -157,16 +162,14 @@ class GameComponent extends StatelessWidget {
                   return Text("Error al verificar comentario");
                 } else if (snapshot.hasData) {
                   bool isCommented = snapshot.data!;
+                  final size = MediaQuery.of(context).orientation == Orientation.landscape
+                      ? MediaQuery.of(context).size.height * 0.25
+                      : MediaQuery.of(context).size.width * 0.15;
 
-                  return FloatingActionButton(
-                    onPressed: () {},
-                    shape: const CircleBorder(),
-                    backgroundColor: Colors.black,
-                    child: IconButton(
-                      icon: Icon(
-                        isCommented ? Icons.edit : Icons.add,
-                        size: 40,
-                      ),
+                  return SizedBox(
+                    width: size,
+                    height: size,
+                    child: FloatingActionButton(
                       onPressed: () {
                         if (isCommented) {
                           showEditCommentForm(context);
@@ -174,9 +177,16 @@ class GameComponent extends StatelessWidget {
                           showCommentForm(context);
                         }
                       },
-                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      backgroundColor: Colors.black,
+                      child: Icon(
+                        isCommented ? Icons.edit : Icons.add,
+                        size: size * 0.5, // El ícono ocupa la mitad del FAB
+                        color: Colors.white,
+                      ),
                     ),
                   );
+
                 } else {
                   return SizedBox(); // fallback
                 }

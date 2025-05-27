@@ -66,7 +66,7 @@ class CommentaryRepository {
           .collection(_collection)
           .where('userId', isEqualTo: uid)
           .orderBy('createdAt', descending: true)
-          .limit(10)
+          .limit(11)
           .get();
       List gamesIds = response.docs
           .map((doc) => doc['gameId'])

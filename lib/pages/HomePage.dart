@@ -17,6 +17,7 @@ import '../components/ToolBar.dart';
 import '../components/UserName.dart';
 import '../routes/AppRoutes.dart';
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -75,7 +76,7 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                     icon: Icon(Icons.arrow_back),
                 ),
-                title: UserImage(size: 45, uid: userId??"",),
+                title: UserImage(size: 45, uid: userId ?? "",),
                 actions: [
                   SearchPlaceholder(),
                   if (kIsWeb) UserName(),
@@ -142,7 +143,7 @@ class _HomePageState extends State<HomePage> {
 
           AnimatedPositioned(
             duration: Duration(milliseconds: 300),
-            left: _isSidebarOpen ? 0 : -250,
+            left: _isSidebarOpen ? 0 : -MediaQuery.of(context).size.width *0.6,
             top: 0,
             bottom: 0,
             child: Container(

@@ -20,6 +20,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
+/// Esta clase permite mostrar la imagen de usuario a partir de la uid proporcionada mediante una llamada a Gravatar
 class UserImage extends StatefulWidget {
   final String uid;
   final double size;

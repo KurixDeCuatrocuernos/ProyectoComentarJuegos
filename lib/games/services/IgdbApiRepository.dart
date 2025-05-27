@@ -75,19 +75,23 @@ class IgdbApiRepository {
 
     if (response.statusCode == 200) {
       final List decoded = jsonDecode(response.body);
-      return decoded.map<GameModel>((json) {
+      return decoded.map<GameModel?>((json) {
         try{
           return GameModel.fromMap(json);
         } catch (error) {
-          print("ERROR AL CONVERTIR AUTOMÄTICAMENTE JSON A GAMEMODEL EN EL REPOSITORIO DE LA API: $error");
-          return GameModel(
-            id: int.parse(json['id']),
-            name: json['name'],
-            coverId: int.parse(json['cover']),
-            first_release_date: Timestamp.fromMillisecondsSinceEpoch(json['first_release_date']),
-            summary: json['summary'],
-            rating: double.parse(json['rating']),
-          );
+          try {
+            print("ERROR AL CONVERTIR AUTOMÄTICAMENTE JSON A GAMEMODEL EN EL REPOSITORIO DE LA API: $error");
+            return GameModel(
+              id: int.parse(json['id']),
+              name: json['name'],
+              coverId: int.parse(json['cover']),
+              first_release_date: Timestamp.fromMillisecondsSinceEpoch(json['first_release_date']),
+              summary: json['summary'],
+              rating: double.parse(json['rating']),
+            );
+          } catch (error2) {
+            return null; /// if misses here, the search didn't return results
+          }
         }
       }).whereType<GameModel>().toList();
     } else if (response.statusCode == 429) {
@@ -113,7 +117,7 @@ class IgdbApiRepository {
         "Client-ID": _clientId,
         'Authorization': 'Bearer $_accessToken',
       },
-      body: 'fields id, name, genres.name, rating, summary, cover; where id = $id;',    );
+      body: 'fields id, name, genres.name, rating, summary, cover; where id = $id;',);
 
     if (response.statusCode == 200) {
       final data = await jsonDecode(response.body);
@@ -219,7 +223,7 @@ class IgdbApiRepository {
         fields id, name, cover, first_release_date;
         where genres = $genre & first_release_date != null & game_type = 0;
         sort first_release_date desc;
-        limit 10;
+        limit 11;
       ''',
       );
       if (response.statusCode == 200) {

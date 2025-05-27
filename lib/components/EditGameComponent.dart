@@ -23,8 +23,6 @@ class EditGameComponent extends StatefulWidget {
 
 class _EditGameComponentState extends State<EditGameComponent> {
   final _formKey = GlobalKey<FormState>();
-  final TextStyle _formTextStyle = TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold,);
-  final TextStyle _inputFormStyle = TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.bold,);
   GameFormValidator _formValidator = GameFormValidator();
   GameFormController _formController = GameFormController();
   DateTime? _selectedDate;
@@ -130,6 +128,10 @@ class _EditGameComponentState extends State<EditGameComponent> {
 
   @override
   Widget build(BuildContext context) {
+    double _textSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.height * 0.02;
+    final TextStyle _formTextStyle = TextStyle(color: Colors.white, fontSize: _textSize, fontWeight: FontWeight.bold,);
+    final TextStyle _inputFormStyle = TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.bold,);
+
     return Dialog(
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -166,7 +168,7 @@ class _EditGameComponentState extends State<EditGameComponent> {
                 child: Text(
                   "New Game's Data",
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.04 : MediaQuery.of(context).size.width * 0.05,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),

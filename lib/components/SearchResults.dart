@@ -25,30 +25,34 @@ class SearchResults extends StatelessWidget {
     if (games.isEmpty || query.isEmpty) return SizedBox.shrink();
 
     return Positioned(
-      top: 110, // Ajusta esta altura según el tamaño del header y la barra
+      top: kToolbarHeight + 50, // Ajusta esta altura en función del tamaño del header y la barra
       left: 0,
       right: 0,
       child: Material(
         elevation: 5, // Para que se vea encima del contenido
         child: Container(
-          height: 500,
           color: Colors.grey,
-          child: ListView.builder(
-            shrinkWrap: true, // Evita que ocupe toda la pantalla
-            itemCount: games.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: TextButton(
-                  style: ButtonStyle(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: ListView.builder(
+              shrinkWrap: true, // Evita que ocupe toda la pantalla
+              itemCount: games.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: TextButton(
+                    style: ButtonStyle(
+                    ),
+                    onPressed: () {
+                      _gameRedirect(games[index]);
+                    },
+                    child: Text(games[index].name),
                   ),
-                  onPressed: () {
-                    _gameRedirect(games[index]);
-                  },
-                  child: Text(games[index].name),
-                ),
-                ///subtitle: Text(games[index]['id']), id is a String type
-              );
-            },
+                  ///subtitle: Text(games[index]['id']), id is a String type
+                );
+              },
+            ),
           ),
         ),
       ),

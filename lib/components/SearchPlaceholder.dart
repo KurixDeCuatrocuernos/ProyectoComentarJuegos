@@ -70,8 +70,8 @@ class _SearchPlaceholderState extends State<SearchPlaceholder> {
             }
           },
           child: SizedBox(
-            width: kIsWeb ? 300 : 200,
-            height: 80,
+            width: MediaQuery.of(context).size.width * 0.5,
+            height: MediaQuery.of(context).size.height * 0.1,
             child: TextField(
               focusNode: _focusNode,
               onChanged: (query) {

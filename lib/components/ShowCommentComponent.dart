@@ -28,11 +28,9 @@ class ShowCommentComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    final _commentTextStyle = TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold);
+    double _textSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06: MediaQuery.of(context).size.height * 0.02;
+    final _commentTextStyle = TextStyle(color: Colors.white, fontSize: _textSize, fontWeight: FontWeight.bold);
     final _dialogStyle = BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.white, width: 2,));
-    final _commentViewModel = context.watch<CommentViewModel>();
-    final _userViewModel = context.watch<UserViewModel>();
-    final _gameViewModel = context.watch<GameViewModel>();
 
     String _capitalizeLetter(String text) {
       if (text.isEmpty) {
@@ -256,7 +254,7 @@ class ShowCommentComponent extends StatelessWidget {
 
     return Center(
       child: Container(
-        width: 400,
+        width: MediaQuery.of(context).size.width * 0.8,
         decoration: BoxDecoration(
           color: (comment.status != null && comment.status == 5) ? Color(0xFF4E0101) : Colors.black,
           borderRadius: BorderRadius.circular(15),
@@ -375,7 +373,7 @@ class ShowCommentComponent extends StatelessWidget {
             ),
 
             Container(
-              width: 400,
+              width: MediaQuery.of(context).size.width * 0.8,
               decoration: BoxDecoration(
                 color: Color(0xFFDDD8D8),
               ),

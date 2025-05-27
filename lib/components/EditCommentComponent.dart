@@ -19,8 +19,6 @@ class EditCommentComponent extends StatefulWidget {
 class _EditCommentComponentState extends State<EditCommentComponent> {
 
   final _formKey = GlobalKey<FormState>();
-  final _textFormStyle = TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold);
-  final _textButtonStyle = TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold);
   final CommentaryController _commentController = CommentaryController();
   final CommentaryValidator _commentValidator = CommentaryValidator();
 
@@ -90,7 +88,7 @@ class _EditCommentComponentState extends State<EditCommentComponent> {
               onPressed: () {
                 Get.back();
               }, 
-              child: Text('OK', style: _textFormStyle,),
+              child: Text('OK', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),),
             ),
           ],
         ),
@@ -100,6 +98,10 @@ class _EditCommentComponentState extends State<EditCommentComponent> {
 
   @override
   Widget build(BuildContext context) {
+    double _textSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.height * 0.02;
+    final _textFormStyle = TextStyle(color: Colors.white, fontSize: _textSize, fontWeight: FontWeight.bold);
+    final _textButtonStyle = TextStyle(color: Colors.white, fontSize: _textSize, fontWeight: FontWeight.bold);
+
     return Dialog(
       child: Container(
         decoration: BoxDecoration(
@@ -107,8 +109,8 @@ class _EditCommentComponentState extends State<EditCommentComponent> {
           borderRadius: BorderRadius.circular(15),
           color: Color(0xFF120B0B),
         ),
-        width: 400,
-        height: 600,
+        width: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.7 : MediaQuery.of(context).size.width * 0.5,
+        height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.7 : MediaQuery.of(context).size.height * 0.8,
         child: Column(
           children: [
             SizedBox(height: 5,),
@@ -128,7 +130,7 @@ class _EditCommentComponentState extends State<EditCommentComponent> {
             Text(
               "COMMENT'S DATA",
               style: TextStyle(
-                fontSize: 20,
+                fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.width * 0.04 : MediaQuery.of(context).size.width * 0.05,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),

@@ -321,231 +321,237 @@ class _ProfileComponentState extends State<ProfileComponent> {
     final passwordToggler = Get.put(PasswordToggler());
 
     return Container(
-      child: Column(
-        children: [
-          SizedBox(
-            height: 20,
-          ),
-          Text(
-            'USER DATA',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF630000),
-            ),
-          ),
-          Row(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
             children: [
+              SizedBox(
+                height: 20,
+              ),
+              Text(
+                'USER DATA',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF630000),
+                ),
+              ),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 40,
+                    ),
+                    child: Text(
+                      'Your current Username: \n$username' ?? 'Your Username',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: 40,
                 ),
-                child: Text(
-                  'Your current Username: \n$username' ?? 'Your Username',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                child: Form(
+                  key: _formName,
+                  child: TextFormField(
+                    controller: authController.nameController,
+                    validator: formValidator.isValidName,
+                    decoration: const InputDecoration(hintText: 'Your new user name'),
                   ),
                 ),
               ),
-            ],
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 40,
-            ),
-            child: Form(
-              key: _formName,
-              child: TextFormField(
-                controller: authController.nameController,
-                validator: formValidator.isValidName,
-                decoration: const InputDecoration(hintText: 'Your new user name'),
-              ),
-            ),
-          ),
-          SizedBox(height: 20,),
-          Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 40,
-                ),
-                child: Text(
-                  'Your Current Email: \n$usermail' ?? 'Your Email',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Form(
-            key: _formPassword,
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 10,
-                  ),
-                  child: Obx(() => TextFormField(
-                    validator: formValidator.isValidPass,
-                    controller: authController.passwordController,
-                    obscureText: passwordToggler.isObscure1.value,
-                    decoration: InputDecoration(
-                      hintText: "Insert your Password",
-                      suffixIcon: IconButton(
-                        icon: Icon(passwordToggler.isObscure1.value
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                        onPressed: () {
-                          passwordToggler.togglePasswordVisibility(1);
-                        },
+              SizedBox(height: 20,),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 40,
+                    ),
+                    child: Text(
+                      'Your Current Email: \n$usermail' ?? 'Your Email',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
                     ),
                   ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 10,
-                  ),
-                  child: Obx( () => TextFormField(
-                    validator: (String? value){
-                      return formValidator.isValidRepeatedPass(value, authController.passwordController.text);
-                    },
-                    obscureText: passwordToggler.isObscure2.value,
-                    decoration: InputDecoration(
-                      hintText: "Repeat your Password",
-                      suffixIcon: IconButton(
-                        icon: Icon(passwordToggler.isObscure2.value
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                        onPressed: () {
-                          passwordToggler.togglePasswordVisibility(2);
-                        },
+                ],
+              ),
+              Form(
+                key: _formPassword,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 10,
+                      ),
+                      child: Obx(() => TextFormField(
+                        validator: formValidator.isValidPass,
+                        controller: authController.passwordController,
+                        obscureText: passwordToggler.isObscure1.value,
+                        decoration: InputDecoration(
+                          hintText: "Insert your Password",
+                          suffixIcon: IconButton(
+                            icon: Icon(passwordToggler.isObscure1.value
+                                ? Icons.visibility_off
+                                : Icons.visibility),
+                            onPressed: () {
+                              passwordToggler.togglePasswordVisibility(1);
+                            },
+                          ),
+                        ),
+                      ),
                       ),
                     ),
-                  ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 40,),
-          Text(
-            'USER PICTURE',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF630000),
-            ),
-          ),
-          SizedBox(height: 20,),
-
-          IconButton(
-            onPressed: () {
-              _changeImage(context);
-            },
-            icon: takeUserImage(gravatarAttr, _size),
-            iconSize: _size + 10.0,
-          ),
-
-          SizedBox(height: 50,),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              TextButton(
-                onPressed: () async {
-                  final name = authController.nameController.text.trim();
-                  final pass = authController.passwordController.text.trim();
-
-                  bool isValid = true;
-
-                  if (name.isNotEmpty && !_formName.currentState!.validate()) isValid = false;
-                  if (pass.isNotEmpty && !_formPassword.currentState!.validate()) isValid = false;
-
-                  if (name.isEmpty && pass.isEmpty && gravatarAttr == 'mp') {
-                    print("NINGÚN CAMPO SE HA MODIFICADO");
-                    return;
-                  }
-
-                  if (!isValid) {
-                    print("CHECK THE DATA");
-                    return;
-                  }
-
-                  Map<String, dynamic> data = {};
-
-                  if (name.isNotEmpty) data['name'] = name;
-                  if (pass.isNotEmpty) data['pass'] = pass;
-                  if (gravatarAttr != 'mp') data['image'] = gravatarAttr;
-
-                  String? result = await context.read<UserViewModel>().updateData(data);
-
-                  if (result == null) {
-                    showConfirmText(context);
-                  } else {
-                    showErrorText(result, context);
-                  }
-                },
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all<Color>(
-                      Color(0xFF006317),
-                  ), // tu color
-                  padding: WidgetStateProperty.all<EdgeInsets>(
-                    EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 10,
+                      ),
+                      child: Obx( () => TextFormField(
+                        validator: (String? value){
+                          return formValidator.isValidRepeatedPass(value, authController.passwordController.text);
+                        },
+                        obscureText: passwordToggler.isObscure2.value,
+                        decoration: InputDecoration(
+                          hintText: "Repeat your Password",
+                          suffixIcon: IconButton(
+                            icon: Icon(passwordToggler.isObscure2.value
+                                ? Icons.visibility_off
+                                : Icons.visibility),
+                            onPressed: () {
+                              passwordToggler.togglePasswordVisibility(2);
+                            },
+                          ),
+                        ),
+                      ),
+                      ),
                     ),
-                  ),
-                ),
-                child: Text(
-                  'SAVE DATA',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  ],
                 ),
               ),
-              TextButton(
+              SizedBox(height: 40,),
+              Text(
+                'USER PICTURE',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF630000),
+                ),
+              ),
+              SizedBox(height: 20,),
+
+              IconButton(
                 onPressed: () {
-                  authController.nameController.text="";
-                  authController.passwordController.text="";
-                  print("SAVE CANCELADO");
-                  },
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all<Color>(
-                    Color(0xFF750202),
-                  ), // tu color
-                  padding: WidgetStateProperty.all<EdgeInsets>(
-                    EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                  _changeImage(context);
+                },
+                icon: takeUserImage(gravatarAttr, _size),
+                iconSize: _size + 10.0,
+              ),
+
+              SizedBox(height: 50,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () async {
+                      final name = authController.nameController.text.trim();
+                      final pass = authController.passwordController.text.trim();
+
+                      bool isValid = true;
+
+                      if (name.isNotEmpty && !_formName.currentState!.validate()) isValid = false;
+                      if (pass.isNotEmpty && !_formPassword.currentState!.validate()) isValid = false;
+
+                      if (name.isEmpty && pass.isEmpty && gravatarAttr == 'mp') {
+                        print("NINGÚN CAMPO SE HA MODIFICADO");
+                        return;
+                      }
+
+                      if (!isValid) {
+                        print("CHECK THE DATA");
+                        return;
+                      }
+
+                      Map<String, dynamic> data = {};
+
+                      if (name.isNotEmpty) data['name'] = name;
+                      if (pass.isNotEmpty) data['pass'] = pass;
+                      if (gravatarAttr != 'mp') data['image'] = gravatarAttr;
+
+                      String? result = await context.read<UserViewModel>().updateData(data);
+
+                      if (result == null) {
+                        showConfirmText(context);
+                      } else {
+                        showErrorText(result, context);
+                      }
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.all<Color>(
+                        Color(0xFF006317),
+                      ), // tu color
+                      padding: WidgetStateProperty.all<EdgeInsets>(
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      'SAVE DATA',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                child: Text(
-                  'CANCEL',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  TextButton(
+                    onPressed: () {
+                      authController.nameController.text="";
+                      authController.passwordController.text="";
+                      print("SAVE CANCELADO");
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.all<Color>(
+                        Color(0xFF750202),
+                      ), // tu color
+                      padding: WidgetStateProperty.all<EdgeInsets>(
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      'CANCEL',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
+              SizedBox(height: 20,),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../viewModels/GameViewModel.dart';
 
+/// Esta clase sirve para mostrar la imagen de un Juego mediante la url obtenida de la API
 class GameImage extends StatelessWidget {
   final GameModel? game;
   final GameApiProjection? gameApi;

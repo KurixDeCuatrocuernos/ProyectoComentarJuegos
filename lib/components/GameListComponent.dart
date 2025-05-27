@@ -43,8 +43,6 @@ class _GameListComponentState extends State<GameListComponent> {
         return [];
       }
     }
-
-
   }
 
   @override
@@ -62,6 +60,8 @@ class _GameListComponentState extends State<GameListComponent> {
           children: [
             Text(
               "${widget.genre.toUpperCase()}, From ViewModel",
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
@@ -71,29 +71,35 @@ class _GameListComponentState extends State<GameListComponent> {
             SizedBox(height: 5),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row(
-                children: gameList
-                    .where((game) => game.coverId != null)
-                    .map((game) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: SizedBox(
-                    width: 64,
-                    height: 128,
-                    child: GestureDetector(
-                      child: GameImage(gameApi: game),
-                      onTap: () async {
-                        GameModel? gameModeled = await _gameViewModel.getGameByIdFromApi(game.id!);
-                        if (gameModeled != null) {
-                          Get.toNamed(Routes.game, arguments: gameModeled);
-                        } else {
-                          /// Redirigir a la página de error
-                          Get.offAllNamed(Routes.loading);
-                        }
-                      },
-                    ),
+              child: Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  Row(
+                    children: gameList
+                        .where((game) => game.coverId != null)
+                        .map((game) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: SizedBox(
+                        width: 64,
+                        height: 128,
+                        child: GestureDetector(
+                          child: GameImage(gameApi: game),
+                          onTap: () async {
+                            GameModel? gameModeled = await _gameViewModel.getGameByIdFromApi(game.id!);
+                            if (gameModeled != null) {
+                              Get.toNamed(Routes.game, arguments: gameModeled);
+                            } else {
+                              /// Redirigir a la página de error
+                              Get.offAllNamed(Routes.loading);
+                            }
+                          },
+                        ),
+                      ),
+                    ))
+                        .toList(),
                   ),
-                ))
-                    .toList(),
+                ],
               ),
             ),
           ],
@@ -129,29 +135,35 @@ class _GameListComponentState extends State<GameListComponent> {
                   final gameIds = snapshot.data!;
                   return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: gameIds
-                          .where((game) => game.coverId != null)
-                          .map((game) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: SizedBox(
-                          width: 64,
-                          height: 128,
-                          child: GestureDetector(
-                            child: GameImage(gameApi: game),
-                            onTap: () async {
-                              GameModel? gameModeled = await _gameViewModel.getGameByIdFromApi(game.id!);
-                              if (gameModeled != null) {
-                                Get.toNamed(Routes.game, arguments: gameModeled);
-                              } else {
-                                /// Redirigir a la página de error
-                                Get.offAllNamed(Routes.loading);
-                              }
-                            },
-                          ),
+                    child: Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: [
+                        Row(
+                          children: gameIds
+                              .where((game) => game.coverId != null)
+                              .map((game) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: SizedBox(
+                              width: 64,
+                              height: 128,
+                              child: GestureDetector(
+                                child: GameImage(gameApi: game),
+                                onTap: () async {
+                                  GameModel? gameModeled = await _gameViewModel.getGameByIdFromApi(game.id!);
+                                  if (gameModeled != null) {
+                                    Get.toNamed(Routes.game, arguments: gameModeled);
+                                  } else {
+                                    /// Redirigir a la página de error
+                                    Get.offAllNamed(Routes.loading);
+                                  }
+                                },
+                              ),
+                            ),
+                          ))
+                              .toList(),
                         ),
-                      ))
-                          .toList(),
+                      ],
                     ),
                   );
                 }

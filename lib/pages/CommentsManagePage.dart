@@ -114,8 +114,8 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                       Text(
                         'COMMENTS MANAGE PAGE',
                         style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 20,
+                          color: Color(0xFF750202),
+                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.08 : MediaQuery.of(context).size.height *0.03,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -124,7 +124,8 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                         children: [
                           SizedBox(width: 20,),
                           SizedBox(
-                            width: 300, height: 50,
+                            width: MediaQuery.of(context).size.width * 0.8,
+                            height: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.2 : MediaQuery.of(context).size.height * 0.08,
                             child: SearchBar(
                               backgroundColor: WidgetStatePropertyAll(Color(0xFFDDDBDB)),
                               hintText: "Search User's or Game's commentary...",
@@ -132,10 +133,10 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
                                 TextStyle(
                                   fontWeight: FontWeight.w500,
                                   color: Colors.black,
-                                  fontSize: 12,
+                                  fontSize: MediaQuery.of(context).size.width * 0.035,
                                 ),
                               ),
-                              leading: Icon(Icons.search),
+                              leading: Icon(Icons.search, size: MediaQuery.of(context).size.width * 0.035,),
                               onChanged: (text) {
                                 setState(() {
                                   _searchText = text;
@@ -214,11 +215,11 @@ class _CommentsManagePageState extends State<CommentsManagePage> {
 
           AnimatedPositioned(
             duration: Duration(milliseconds: 300),
-            left: _isSidebarOpen ? 0 : -250,
+            left: _isSidebarOpen ? 0 : -MediaQuery.of(context).size.width * 0.6,
             top: 0,
             bottom: 0,
             child: Container(
-              width: 250,
+              width: MediaQuery.of(context).size.width * 0.6,
               color: Colors.grey[900],
               child: Column(
                 children: [

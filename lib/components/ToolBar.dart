@@ -14,8 +14,8 @@ class ToolBar extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      height: 100,
+      width: MediaQuery.of(context).size.width * 1.0,
+      height: MediaQuery.of(context).size.height * 0.1,
       color: Colors.black,
       child: Row(
         mainAxisSize: MainAxisSize.min,

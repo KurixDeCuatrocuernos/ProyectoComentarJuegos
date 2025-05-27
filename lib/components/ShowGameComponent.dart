@@ -220,7 +220,8 @@ class ShowGameComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _dataStyle = TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500,);
+    double _textSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06 : MediaQuery.of(context).size.height * 0.02;
+    final _dataStyle = TextStyle(color: Colors.white, fontSize: _textSize, fontWeight: FontWeight.w500,);
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 10,),

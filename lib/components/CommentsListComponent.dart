@@ -65,6 +65,7 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<CommentViewModel>();
+    double _circleSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.2 : MediaQuery.of(context).size.height * 0.06;
 
     return FutureBuilder<List<CommentProjection>?>(
         future: viewModel.getCommentsFromRepository(widget.game),
@@ -92,20 +93,20 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                       /// Header con imagen y nombre de usuario
                       Row(
                         children: [
-                          UserImage(size: 50, uid: comment.comment.userId),
+                          UserImage(size: _circleSize, uid: comment.comment.userId),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               comment.userId,
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.width * 0.045,
                                 color: Colors.white,
                               ),
                             ),
                           ),
                           Container(
-                            width: 50,
-                            height: 50,
+                            width: _circleSize,
+                            height: _circleSize,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(50),
                               color: Color(_gameRatingColor(comment.comment.value.toDouble())),
@@ -115,7 +116,7 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                                 comment.comment.value.toString() ?? 'NULL',
                                 style: TextStyle(
                                   color: Colors.black,
-                                  fontSize: 20,
+                                  fontSize: _circleSize/2,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -129,10 +130,10 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                       Center(
                         child: Text(
                           comment.comment.title ?? 'TITLE NOT FOUND',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.width * 0.045,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -142,8 +143,9 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                       /// Cuerpo del comentario
                       Text(
                         comment.comment.body ?? 'BODY NOT FOUND',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
+                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
                         ),
                         textAlign: TextAlign.justify,
                       ),
@@ -154,9 +156,9 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
                         alignment: Alignment.centerRight,
                         child: Text(
                           _formatDateTime(comment.comment.createdAt),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white70,
-                            fontSize: 12,
+                            fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
