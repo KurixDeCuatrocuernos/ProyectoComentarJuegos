@@ -25,11 +25,8 @@ class _CommentedGamesListComponent extends State<CommentedGamesListComponent> {
   void initState() {
     super.initState();
     final viewModel = context.read<GameViewModel>();
-    if (viewModel.getListCommentedGames().isEmpty) {
-      _future = viewModel.getAllGamesFromRepository(widget.user!.uid);
-    } else {
-      _future = Future.value(viewModel.getListCommentedGames());
-    }
+    _future = viewModel.getAllGamesFromRepository(widget.user!.uid);
+
   }
 
   @override

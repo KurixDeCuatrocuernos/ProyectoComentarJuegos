@@ -1,19 +1,13 @@
 
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:game_box/comments/models/CommentaryModel.dart';
 import 'package:game_box/repository/CommentaryRepository.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:provider/provider.dart';
 
 import '../auth/models/UserModel.dart';
 import '../games/models/GameModel.dart';
 import '../repository/GameRepository.dart';
 import '../repository/UserRepository.dart';
-import '../routes/AppRoutes.dart';
-import 'UserViewModel.dart';
 
 class AdminViewModel extends ChangeNotifier {
 
@@ -47,6 +41,7 @@ class AdminViewModel extends ChangeNotifier {
 
     try {
       final data = await _userRepo.getAllUsers();
+      print("Usuarios recogidos en el viewModel: $data");
       _users = data ?? [];
     } catch (e) {
       _hasError = true;
@@ -87,7 +82,7 @@ class AdminViewModel extends ChangeNotifier {
   }
 
   bool _containsCharNoAlfanumeric(String texto) {
-    final alfanumerico = RegExp(r'^[a-zA-Z0-9 _\-\:\.\,áéíóúüÁÉÍÓÚÜñÑ]+$');
+    final alfanumerico = RegExp(r'^[a-zA-Z0-9 _\-\:\.\,\@áéíóúüÁÉÍÓÚÜñÑ]+$');
     return !alfanumerico.hasMatch(texto);
   }
 
@@ -102,7 +97,7 @@ class AdminViewModel extends ChangeNotifier {
             _filteredUsers.add(user);
           }
         }
-        print("USUARIOS RECOGIDOS: $_filteredUsers");
+        print("USUARIOS RECOGIDOS A PARTIR DE LA BÚSQUEDA: $_filteredUsers");
       } catch (e) {
         print("Error in Search: $e");
       }

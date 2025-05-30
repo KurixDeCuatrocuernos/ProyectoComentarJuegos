@@ -23,14 +23,14 @@ class GameRepository {
   }
 
   Future<GameModel?> getGameById(int id) async {
-    print("Buscando el Juego: $id, en la Base de Datos");
+    //print("Buscando el Juego: $id, en la Base de Datos");
     try {
       final DocumentSnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
           .doc(id.toString())
           .get();
       if (response.exists) {
-        print("Se ha obtenido: ${response.data()}");
+        //print("Se ha obtenido: ${response.data()}");
         return GameModel.fromMap(response.data() as Map<String, dynamic>);
       } else {
         return null;

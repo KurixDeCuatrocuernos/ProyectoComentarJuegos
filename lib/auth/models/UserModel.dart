@@ -41,9 +41,6 @@ class UserModel {
     if (map['weight'] == null) {
       throw ArgumentError("Falta el weight de usuario");
     }
-    if (map['image'] == null) {
-      throw ArgumentError("Falta el image de usuario");
-    }
     if (map['createdAt'] == null) {
       throw ArgumentError("Falta el createdAt de usuario");
     }
@@ -54,7 +51,7 @@ class UserModel {
       role: map['role'],
       status: (map['status'] ?? 0) as int,
       weight: (map['weight'] as num).toDouble(),
-      image: map['image'],
+      image: map['image'] ?? "",
       createdAt: map['createdAt'],
     );
   }

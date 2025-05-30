@@ -241,7 +241,7 @@ class UserRepository {
   }
 
   Future <List<UserModel>?> getAllUsers() async {
-    //print("RECOGIENDO TODOS LOS DATOS DE LOS USUARIOS");
+    print("RECOGIENDO TODOS LOS DATOS DE LOS USUARIOS");
     try {
       final QuerySnapshot response = await FirebaseFirestore.instance
           .collection(_collection)
@@ -251,12 +251,12 @@ class UserRepository {
 
         return response.docs.map((doc) {
           final data = doc.data();
-          //print("SE HA RECOGIDO: $data");
+          print("SE HA RECOGIDO: $data");
           if(data is Map<String, dynamic>) {
-            //print("Map recibido: $data");
+            print("Map recibido: $data");
             return UserModel.fromMap(data);
           } else {
-            //print("Documento con Formato inesperado: $doc");
+            print("Documento con Formato inesperado: $doc");
             return null;
           }
         }).whereType<UserModel>().toList();

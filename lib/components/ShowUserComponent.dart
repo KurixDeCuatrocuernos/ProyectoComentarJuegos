@@ -37,7 +37,7 @@ class ShowUserComponent extends StatelessWidget {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text('Deleting User'),
-          content: Text('Are you sure you want to delete this user?'),
+          content: Text("Are you sure you want to delete this user? (This action will delete this user's comments too)"),
           actions: <Widget>[
             TextButton(
               child: Text('No'),
@@ -208,6 +208,7 @@ class ShowUserComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double _textSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.06 : MediaQuery.of(context).size.height * 0.015;
+    print("UserManagePage construido con los usuarios: $user");
     return Container(
       width: MediaQuery.of(context).size.width * 0.8,
       decoration: BoxDecoration(
