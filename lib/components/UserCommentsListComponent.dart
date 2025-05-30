@@ -31,7 +31,7 @@ class UserCommentsListComponent extends StatelessWidget {
   }
 
   int _gameRatingColor(double rating) {
-    if (rating > 0 && rating < 10) {
+    if (rating >= 0 && rating < 10) {
       return 0xFFBC0101; // Color rojo
     } else if (rating >= 10 && rating < 20) {
       return 0xFFAF1B02; // Color naranja oscuro
@@ -89,125 +89,140 @@ class UserCommentsListComponent extends StatelessWidget {
                     color: Color(0xFFFF0000),
                   ),
                 );
-              } else if (snapshot.hasData) {
-                double _circleSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.2 : MediaQuery.of(context).size.height * 0.06;
-                /// If future has data, shows it
-                return Container(
-                  child: Column(
-                    children: [
-                      SizedBox(height: 30,),
-                      ...snapshot.data!.map((comment) =>
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                        child: GestureDetector(
-                          onTap: () {
-                            _pageViewModel.redirectToGameById(comment.gameId);
-                          },
-                          child: Container(
-                          width: MediaQuery.of(context).size.width * 0.8,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF1C1B1B),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Column(
-                            children: [
-                              SizedBox(height: 10,),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  UserImage(size: _circleSize, uid: comment.userId),
-                                  UserName(),
-                                  Container(
-                                    width: _circleSize,
-                                    height: _circleSize,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(50),
-                                      color: Color(_gameRatingColor(comment.value.toDouble())),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        comment.value.toString(),
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: _circleSize/2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 10,),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 25),
-                                      child: Text(
-                                        comment.title,
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.width * 0.045,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 10,),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 25),
-                                      child: Text(
-                                        comment.body,
-                                        style: TextStyle(
-                                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
-                                          fontWeight: FontWeight.normal,
-                                          color: Colors.white,
-                                        ),
-                                        textAlign: TextAlign.justify,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 5,),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 25),
-                                    child: Text(
-                                      _formatDateTime(comment.createdAt),
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
+              }  else if (snapshot.hasData) {
 
-                                ],
-                              ),
-                              SizedBox(height: 10,),
-                            ],
-                          ),
+                if (snapshot.data!.isEmpty) {
+                  return Column(
+                    children: [
+                      Text(
+                        "BUT NOBODY COMES... You didn't comment any game yet",
+                        style: TextStyle(
+                          color: Color(0xFF750202),
+                          fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.15 : MediaQuery.of(context).size.height * 0.03,
                         ),
-                      ),
-                      ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
-                  ),
-                );
+                  );
+                } else {
+                  double _circleSize = MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.2 : MediaQuery.of(context).size.height * 0.06;
+                  /// If future has data, shows it
+                  return Container(
+                    child: Column(
+                      children: [
+                        SizedBox(height: 30,),
+                        ...snapshot.data!.map((comment) =>
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                              child: GestureDetector(
+                                onTap: () {
+                                  _pageViewModel.redirectToGameById(comment.gameId);
+                                },
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width * 0.8,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF1C1B1B),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      SizedBox(height: 10,),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          UserImage(size: _circleSize, uid: comment.userId),
+                                          UserName(),
+                                          Container(
+                                            width: _circleSize,
+                                            height: _circleSize,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(50),
+                                              color: Color(_gameRatingColor(comment.value.toDouble())),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                comment.value.toString(),
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: _circleSize/2,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 10,),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(horizontal: 25),
+                                              child: Text(
+                                                comment.title,
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.1 : MediaQuery.of(context).size.width * 0.045,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 10,),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(horizontal: 25),
+                                              child: Text(
+                                                comment.body,
+                                                style: TextStyle(
+                                                  fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
+                                                  fontWeight: FontWeight.normal,
+                                                  color: Colors.white,
+                                                ),
+                                                textAlign: TextAlign.justify,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 5,),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.symmetric(horizontal: 25),
+                                            child: Text(
+                                              _formatDateTime(comment.createdAt),
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: MediaQuery.of(context).orientation == Orientation.landscape ? MediaQuery.of(context).size.height * 0.07 : MediaQuery.of(context).size.width * 0.04,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
 
+                                        ],
+                                      ),
+                                      SizedBox(height: 10,),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
               } else {
                 /// in other case shows an unknown advice
                 return Text(

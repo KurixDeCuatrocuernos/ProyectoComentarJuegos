@@ -104,7 +104,7 @@ class IgdbApiRepository {
   }
 
   Future<GameModel> getGameById(String id) async {
-    print("Buscando el juego en la API");
+    // print("Buscando el juego en la API");
     if (_clientId == null || _accessToken == null || _clientSecret == null){
       throw Exception('Any authentication credential is null: Client=$_clientId, secret=$_clientSecret, token=$_accessToken');
     }
@@ -147,7 +147,7 @@ class IgdbApiRepository {
     if (_clientId == null || _accessToken == null || _clientSecret == null) {
       throw Exception('Any authentication credential is null');
     }
-    print("Cover id: $coverId");
+    //print("Cover id: $coverId");
     final url = Uri.parse('https://api.igdb.com/v4/covers');
 
     final response = await http.post(
@@ -161,7 +161,7 @@ class IgdbApiRepository {
 
     if (response.statusCode == 200) {
       final data = await jsonDecode(response.body);
-      print('COVER OBTENIDA DE LA API: $data');
+      //print('COVER OBTENIDA DE LA API: $data');
       if (data.isNotEmpty && data[0]['image_id'] != null) {
         final imageId = data[0]['image_id'];
         return 'https://images.igdb.com/igdb/image/upload/t_cover_big/$imageId.jpg';

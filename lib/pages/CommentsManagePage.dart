@@ -1,23 +1,16 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:game_box/comments/models/CommentaryModel.dart';
-import 'package:game_box/pages/CommentsPage.dart';
-import 'package:game_box/repository/CommentaryRepository.dart';
-import 'package:game_box/viewModels/CommentViewModel.dart';
 import 'package:game_box/viewModels/PageViewModel.dart';
 import 'package:game_box/viewModels/UserViewModel.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import '../auth/structure/controllers/AuthController.dart';
 import '../components/SearchPlaceholder.dart';
 import '../components/SearchResults.dart';
 import '../components/ShowCommentComponent.dart';
 import '../components/ToolBar.dart';
 import '../components/UserImage.dart';
 import '../components/UserName.dart';
-import '../repository/UserRepository.dart';
 import '../routes/AppRoutes.dart';
 import '../viewModels/AdminViewModel.dart';
 import '../viewModels/AuthViewModel.dart';

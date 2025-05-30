@@ -35,7 +35,6 @@ class _UsersManagePageState extends State<UsersManagePage> {
       await context.read<AuthViewModel>().checkRole();
       await context.read<AdminViewModel>().loadUsers();
     });
-
   }
 
   void _signOut() {
@@ -70,7 +69,7 @@ class _UsersManagePageState extends State<UsersManagePage> {
     final _pageVM = context.read<PageViewModel>();
     bool _isSidebarOpen = context.watch<PageViewModel>().isSidebarOpen;
     final String? userId = context.read<UserViewModel>().getCurrentUserId();
-
+    // print("UserManagePage montado");
     return Scaffold(
       backgroundColor: Colors.grey,
       bottomNavigationBar: ToolBar(onMenuPressed:_pageVM.toggleSidebar),

@@ -3,7 +3,6 @@ import 'package:game_box/games/models/GameApiProjection.dart';
 import 'package:game_box/routes/AppRoutes.dart';
 import 'package:game_box/viewModels/GameViewModel.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:provider/provider.dart';
 
 import 'package:game_box/components/GameImage.dart';

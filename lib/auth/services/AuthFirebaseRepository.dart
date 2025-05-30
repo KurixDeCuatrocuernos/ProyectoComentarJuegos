@@ -26,7 +26,7 @@ class AuthFirebaseRepository {
           'email': email,
           'createdAt': FieldValue.serverTimestamp(), // creation account's date
           'weight': 1.0, // User's default weight
-          'image': null, // User's default image
+          'image': "", // User's default image
           'role': "USER", // User's default role
           'status': 0,
         });

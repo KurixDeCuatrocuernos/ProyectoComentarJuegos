@@ -36,7 +36,7 @@ class _CommentsListComponentState extends State<CommentsListComponent> {
   }
 
   int _gameRatingColor(double rating) {
-    if (rating > 0 && rating < 10) {
+    if (rating >= 0 && rating < 10) {
       return 0xFFBC0101; // Color rojo
     } else if (rating >= 10 && rating < 20) {
       return 0xFFAF1B02; // Color naranja oscuro
