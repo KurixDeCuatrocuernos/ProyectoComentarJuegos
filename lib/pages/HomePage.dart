@@ -69,13 +69,13 @@ class _HomePageState extends State<HomePage> {
           Column(
             children: [
               AppBar(
-                leading: IconButton(
-                    onPressed: () {
-                      Get.back();
-                    },
-                  color: Colors.white,
-                    icon: Icon(Icons.arrow_back),
-                ),
+                // leading: IconButton(
+                //     onPressed: () {
+                //       Get.back();
+                //     },
+                //   color: Colors.white,
+                //     icon: Icon(Icons.arrow_back),
+                // ),
                 title: UserImage(size: 45, uid: userId ?? "",),
                 actions: [
                   SearchPlaceholder(),
